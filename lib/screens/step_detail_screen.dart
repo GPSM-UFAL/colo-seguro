@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
+import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/audio_button.dart';
 import '../widgets/primary_button.dart';
@@ -38,6 +39,12 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
       _tabs[_selectedTab.clamp(0, _tabs.length - 1).toInt()];
 
   @override
+  void dispose() {
+    AudioService.instance.stop();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final showProgress = widget.stepNumber != null && widget.totalSteps != null;
     final sections = _hasTabs ? _activeTab.sections : widget.content.sections;
@@ -51,7 +58,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           children: [
-            // Breadcrumb verde "← Minha jornada"
+            // Breadcrumb verde "← Meu caminho"
             InkWell(
               onTap: () => Navigator.of(context).pop(),
               borderRadius: BorderRadius.circular(8),
@@ -204,11 +211,11 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
             const SizedBox(height: 16),
             AudioButton(audioFile: widget.content.audio),
             const SizedBox(height: 12),
-            // Botão verde "Voltar para minha jornada"
+            // Botão verde "Voltar para meu caminho"
             SizedBox(
               width: double.infinity,
               child: PrimaryButton(
-                label: 'Voltar para minha jornada',
+                label: 'Voltar para meu caminho',
                 icon: null,
                 onPressed: () => Navigator.of(context).pop(),
               ),

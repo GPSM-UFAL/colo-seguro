@@ -21,7 +21,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-  flutter_native_splash: ^2.4.8
+  flutter_native_splash: ^2.4.7
 
 flutter:
   uses-material-design: true
@@ -31,6 +31,7 @@ flutter:
   # (os nomes esperados estão em lib/data/content.dart e no README).
   assets:
     - assets/audio/
+    - assets/branding/
     # >>> AQUI ENTRAM AS ILUSTRAÇÕES <<<
     # Coloque as imagens em assets/illustrations/ (nomes no LEIA-ME).
     # Enquanto não existirem, o app usa um placeholder e não quebra.
@@ -40,8 +41,12 @@ flutter_native_splash:
   android: true
   ios: true
   web: false
-  color: "#2A1422"
+  color: "#FFF7F4"
+  color_dark: "#FFF7F4"
   image: assets/branding/splash_logo.png
+  image_dark: assets/branding/splash_logo.png
   android_12:
-    color: "#2A1422"
+    color: "#FFF7F4"
+    color_dark: "#FFF7F4"
     image: assets/branding/splash_logo.png
+    image_dark: assets/branding/splash_logo.png

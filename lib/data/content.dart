@@ -266,7 +266,8 @@ const Map<String, StepContent> stepContents = {
       StepSection('O que acontece agora',
           'Nesse serviço, um médico vai examinar o colo do útero bem de perto, com um exame chamado colposcopia. É normal e seguro.'),
     ],
-    tip: 'Leve seu documento e o resultado do preventivo.',
+    tip:
+        'Leve seu documento, o resultado do preventivo e o encaminhamento para fazer a colposcopia.',
     audio: 'etapa_encaminhamento.mp3',
     illustration: 'voce_vai_a_um_servico_especial.png',
   ),
@@ -346,8 +347,8 @@ const Map<String, StepContent> stepContents = {
           'O material coletado no exame de colposcopia será enviado para o laboratório de patologia. Lá você deve buscar o resultado depois de pronto para seguir com as próximas etapas.'),
     ],
     tip:
-        'Depois da coleta, aguarde o resultado e siga a orientação da equipe. O exame é realizado todo ano nos dois primeiros ano e caso esteja tudo certo, se repetirá a cada 3 anos',
-    audio: 'etapa_resultado.mp3',
+        'Depois da coleta, aguarde o resultado e siga a orientação da equipe. O exame é realizado todo ano nos dois primeiros anos e caso esteja tudo certo, se repetirá a cada 3 anos',
+    audio: 'etapa_biopsia.mp3',
     illustration: 'etapa_resultado.png',
   ),
   'acompanhamento': StepContent(
@@ -459,7 +460,7 @@ int currentStepIndexForOnboarding(int index) {
 String _headlineForCurrentStep(int index) {
   switch (index) {
     case 0:
-      return 'Veja a jornada completa, com calma.';
+      return 'Veja o caminho completo, com calma.';
     case 1:
       return 'Você fez o preventivo. Agora é aguardar o resultado.';
     case 2:
@@ -568,7 +569,7 @@ JourneyPlan journeyForOnboarding(int index) {
     default:
       return JourneyPlan(
         currentStepIndex: 0,
-        headline: 'Veja a jornada completa, com calma.',
+        headline: 'Veja o caminho completo, com calma.',
         steps: [
           _p('primeiros-cuidados', StepStatus.current, 'Comece por aqui'),
           _p('resultado', StepStatus.next, 'Próxima etapa'),
@@ -585,30 +586,40 @@ JourneyPlan journeyForOnboarding(int index) {
 class FaqItem {
   final String question;
   final String answer;
-  const FaqItem(this.question, this.answer);
+  final String? audio;
+  const FaqItem(this.question, this.answer, {this.audio});
 }
 
 const List<FaqItem> faqItems = [
   FaqItem('Resultado alterado é câncer?',
-      'Não. Quer dizer que algo precisa ser olhado com mais atenção. Não é um diagnóstico de câncer.'),
+      'Não. Quer dizer que algo precisa ser olhado com mais atenção. Não é um diagnóstico de câncer.',
+      audio: 'faq_resultado_alterado.mp3'),
   FaqItem('A colposcopia dói?',
-      'Geralmente não. Pode causar um leve incômodo, parecido com o preventivo, e dura poucos minutos.'),
-  FaqItem('Preciso levar algo no dia?',
-      'Leve seu documento e o resultado do preventivo. Use roupas confortáveis.'),
+      'Geralmente não. Pode causar um leve incômodo, parecido com o preventivo, e dura poucos minutos.',
+      audio: 'faq_colposcopia_doi.mp3'),
+  FaqItem('Preciso levar algo no dia da colposcopia?',
+      'Leve seu documento, o resultado do preventivo e o encaminhamento para fazer a colposcopia. Use roupas confortáveis.',
+      audio: 'faq_o_que_levar.mp3'),
   FaqItem('Posso ir acompanhada?',
-      'Sim. Você pode levar alguém de confiança para te dar apoio.'),
+      'Sim. Você pode levar alguém de confiança para te dar apoio.',
+      audio: 'faq_acompanhada.mp3'),
 ];
 
 class GlossaryItem {
   final String term;
   final String meaning;
-  const GlossaryItem(this.term, this.meaning);
+  final String? audio;
+  const GlossaryItem(this.term, this.meaning, {this.audio});
 }
 
 const List<GlossaryItem> glossary = [
-  GlossaryItem('Papanicolau', 'O exame preventivo do colo do útero.'),
-  GlossaryItem('Colposcopia', 'Exame que vê o colo de pertinho.'),
-  GlossaryItem('Biópsia', 'Coleta de um pedacinho para examinar.'),
+  GlossaryItem('Papanicolau',
+      'O exame preventivo do colo do útero, também chamado citologia.',
+      audio: 'glossario_papanicolau.mp3'),
+  GlossaryItem('Colposcopia', 'Exame que vê o colo de pertinho.',
+      audio: 'glossario_colposcopia.mp3'),
+  GlossaryItem('Biópsia', 'Coleta de um pedacinho para examinar.',
+      audio: 'glossario_biopsia.mp3'),
 ];
 
 /// ---------- Apoio ----------

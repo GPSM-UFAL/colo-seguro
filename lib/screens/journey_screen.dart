@@ -4,7 +4,7 @@ import '../data/content.dart';
 import '../theme/app_theme.dart';
 import 'step_detail_screen.dart';
 
-/// "Minha jornada" — mostra SÓ o caminho da paciente (definido no onboarding).
+/// "Meu caminho" — mostra SÓ o caminho da paciente (definido no onboarding).
 class JourneyScreen extends StatelessWidget {
   const JourneyScreen({
     super.key,
@@ -26,7 +26,7 @@ class JourneyScreen extends StatelessWidget {
           statusLabel: step.statusLabel,
           stepNumber: number,
           totalSteps: total,
-          breadcrumbLabel: 'Minha jornada',
+          breadcrumbLabel: 'Meu caminho',
         ),
       ),
     );
@@ -40,7 +40,7 @@ class JourneyScreen extends StatelessWidget {
         Row(
           children: [
             const Expanded(
-              child: Text('Minha jornada',
+              child: Text('Meu caminho',
                   style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,

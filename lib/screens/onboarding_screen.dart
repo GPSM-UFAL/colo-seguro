@@ -79,14 +79,36 @@ class OnboardingScreen extends StatelessWidget {
                       height: 1.48)),
               const SizedBox(height: 32),
               Expanded(
-                child: ListView.separated(
-                  itemCount: onboardingOptions.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) => _OptionCard(
-                    label: onboardingOptions[i],
-                    icon: onboardingIcons[i],
-                    onTap: () => _enter(context, i),
-                  ),
+                child: Stack(
+                  children: [
+                    ListView.separated(
+                      padding: const EdgeInsets.only(bottom: 56),
+                      itemCount: onboardingOptions.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, i) => _OptionCard(
+                        label: onboardingOptions[i],
+                        icon: onboardingIcons[i],
+                        onTap: () => _enter(context, i),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: IgnorePointer(
+                        child: Container(
+                          height: 56,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0x00FFF7F4), AppColors.bgRose],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),

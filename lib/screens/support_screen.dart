@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
+import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
 
 /// "Apoio" — mensagens de acolhimento e onde buscar ajuda.
@@ -73,7 +74,6 @@ class SupportScreen extends StatelessWidget {
         const SizedBox(height: 20),
         const Text(
           'Se precisar de orientação, atendimento médico ou acolhimento, procure o posto de saúde (UBS) mais próximo da sua casa. A equipe de saúde está preparada para te ouvir, realizar os encaminhamentos necessários e garantir todo o suporte que você precisa.',
-          textAlign: TextAlign.justify,
           style: TextStyle(
             fontSize: 16,
             height: 1.5,
@@ -115,14 +115,7 @@ class _ListenButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Áudio ainda não foi adicionado.'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
+          onTap: () => AudioService.instance.toggle('apoio_onde_buscar_ajuda.mp3'),
           child: const SizedBox(
             height: 52,
             width: double.infinity,

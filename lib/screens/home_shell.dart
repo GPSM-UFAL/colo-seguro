@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
+import '../services/audio_service.dart';
 import '../services/journey_progress_store.dart';
 import '../theme/app_theme.dart';
 import 'journey_screen.dart';
@@ -8,7 +9,7 @@ import 'faq_screen.dart';
 import 'onboarding_screen.dart';
 import 'support_screen.dart';
 
-/// Casca com a barra inferior: Jornada · Dúvidas · Apoio.
+/// Casca com a barra inferior: Caminho · Dúvidas · Apoio.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.currentStepIndex});
 
@@ -18,12 +19,32 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _index = 0;
   late int _currentStepIndex = widget.currentStepIndex;
   late JourneyPlan _plan = journeyForCurrentStepIndex(_currentStepIndex);
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      AudioService.instance.stop();
+    }
+  }
+
   /// Reabre a tela "Onde você está agora?" e remonta o caminho.
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
   Future<void> _changeSituation() async {
     final index = await Navigator.of(context).push<int>(
       MaterialPageRoute(builder: (_) => const OnboardingScreen(asPicker: true)),
@@ -98,12 +119,15 @@ class _HomeShellState extends State<HomeShell> {
           ),
           child: NavigationBar(
             selectedIndex: _index,
-            onDestinationSelected: (i) => setState(() => _index = i),
+            onDestinationSelected: (i) {
+                AudioService.instance.stop();
+                setState(() => _index = i);
+              },
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.timeline_rounded),
-                label: 'Jornada',
+                label: 'Caminho',
               ),
               NavigationDestination(
                 icon: Icon(Icons.help_outline_rounded),

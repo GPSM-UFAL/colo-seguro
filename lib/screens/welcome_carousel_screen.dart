@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
+import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_illustration.dart';
 import '../widgets/audio_button.dart';
@@ -15,9 +16,24 @@ class WelcomeCarouselScreen extends StatefulWidget {
   State<WelcomeCarouselScreen> createState() => _WelcomeCarouselScreenState();
 }
 
-class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> {
+class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
+    with WidgetsBindingObserver {
   final _controller = PageController();
   int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      AudioService.instance.stop();
+    }
+  }
 
   void _next() {
     if (_index < introPages.length - 1) {
@@ -38,6 +54,8 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    AudioService.instance.stop();
     _controller.dispose();
     super.dispose();
   }
@@ -52,16 +70,24 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> {
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
               child: Row(
                 children: [
-                  const Icon(Icons.favorite_rounded,
-                      color: AppColors.primaryPlum, size: 22),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Colo Seguro',
-                    style: TextStyle(
-                      color: AppColors.primaryDarker,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/branding/splash_logo.png',
+                        width: 20,
+                        height: 20,
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Colo Seguro',
+                        style: TextStyle(
+                          color: AppColors.primaryDarker,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                   const Spacer(),
                   if (_index < introPages.length - 1)

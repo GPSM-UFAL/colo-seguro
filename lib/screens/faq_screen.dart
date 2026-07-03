@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
+import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
 
 /// "Tira-dúvidas" — perguntas frequentes (expansíveis) + glossário.
@@ -112,7 +113,7 @@ class _FaqTile extends StatelessWidget {
                       color: AppColors.textSecondary)),
             ),
             const SizedBox(height: 10),
-            const _ListenButton(label: 'Ouvir resposta'),
+            _ListenButton(label: 'Ouvir resposta', audioFile: item.audio),
           ],
         ),
       ),
@@ -146,7 +147,7 @@ class _GlossaryTile extends StatelessWidget {
               style: const TextStyle(
                   fontSize: 13, color: AppColors.textSecondary)),
           const SizedBox(height: 6),
-          const _ListenButton(label: 'Ouvir definição'),
+          _ListenButton(label: 'Ouvir definição', audioFile: item.audio),
         ],
       ),
     );
@@ -154,9 +155,10 @@ class _GlossaryTile extends StatelessWidget {
 }
 
 class _ListenButton extends StatelessWidget {
-  const _ListenButton({required this.label});
+  const _ListenButton({required this.label, this.audioFile});
 
   final String label;
+  final String? audioFile;
 
   @override
   Widget build(BuildContext context) {
@@ -168,13 +170,17 @@ class _ListenButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Áudio ainda não foi adicionado.'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+          onTap: () async {
+            if (audioFile == null) return;
+            final ok = await AudioService.instance.toggle(audioFile!);
+            if (!ok && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Áudio ainda não foi adicionado.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
           },
           child: SizedBox(
             height: 52,
