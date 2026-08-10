@@ -15,18 +15,20 @@ class AudioButton extends StatefulWidget {
     required this.audioFile,
     this.label = 'Ouvir explicação',
     this.compact = false,
+    this.audioController,
   });
 
   final String audioFile;
   final String label;
   final bool compact;
+  final AudioController? audioController;
 
   @override
   State<AudioButton> createState() => _AudioButtonState();
 }
 
 class _AudioButtonState extends State<AudioButton> {
-  final _audio = AudioService.instance;
+  AudioController get _audio => widget.audioController ?? AudioService.instance;
 
   Future<void> _onTap() async {
     final ok = await _audio.toggle(widget.audioFile);
@@ -87,6 +89,7 @@ class _AudioButtonState extends State<AudioButton> {
                 borderRadius: borderRadius,
                 onTap: _onTap,
                 child: Container(
+                  width: compact ? null : double.infinity,
                   height: compact ? 36 : 52,
                   padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 0),
                   alignment: Alignment.center,
