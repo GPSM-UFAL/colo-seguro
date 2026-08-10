@@ -9,14 +9,12 @@ Telas e textos do app **Colo Seguro**.
 Pré-requisito: ter o Flutter instalado (`flutter --version`). Se ainda não tem: https://docs.flutter.dev/get-started/install
 
 ```bash
-# Gera as pastas nativas (android/ ios/ web/) SEM apagar o lib/ já pronto:
-flutter create .
 flutter pub get
 flutter run
 ```
 
-> O `flutter create .` só cria o que falta (projeto nativo). Seu código em
-> `lib/`, o `pubspec.yaml` e os textos já existentes são preservados.
+O projeto oferece suporte somente a Android, iOS e web. Se for necessário
+regenerar essas pastas, use `flutter create --platforms=android,ios,web .`.
 
 Para rodar em um device específico: `flutter devices` e depois `flutter run -d <id>`.
 
@@ -33,7 +31,8 @@ Quem escolhe "Não sei — quero ver tudo" cai na tela **Todos os caminhos**, qu
 Toda a lógica e os textos estão em `lib/data/content.dart`:
 
 - `stepContents` — os nós (etapas) do fluxograma;
-- `journeyForOnboarding(index)` — o "motor" que monta o caminho;
+- `currentStepIndexForOnboarding(index)` — converte a escolha inicial em etapa;
+- `journeyForCurrentStepIndex(index)` — monta a jornada a partir da etapa atual;
 - `allPaths` / `hpvPaths` — o conteúdo da tela "Todos os caminhos".
 
 Para mudar o fluxo (ex.: novo protocolo), edite só esse arquivo.
