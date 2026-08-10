@@ -10,7 +10,9 @@ import 'onboarding_screen.dart';
 
 /// Telas 0 a 5 do Figma — carrossel de boas-vindas com áudio.
 class WelcomeCarouselScreen extends StatefulWidget {
-  const WelcomeCarouselScreen({super.key});
+  const WelcomeCarouselScreen({super.key, this.audioController});
+
+  final AudioController? audioController;
 
   @override
   State<WelcomeCarouselScreen> createState() => _WelcomeCarouselScreenState();
@@ -20,6 +22,8 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
     with WidgetsBindingObserver {
   final _controller = PageController();
   int _index = 0;
+
+  AudioController get _audio => widget.audioController ?? AudioService.instance;
 
   @override
   void initState() {
@@ -31,7 +35,7 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      AudioService.instance.stop();
+      _audio.stop();
     }
   }
 
@@ -46,6 +50,11 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
     }
   }
 
+  void _onPageChanged(int index) {
+    _audio.stop();
+    setState(() => _index = index);
+  }
+
   void _goToApp() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const OnboardingScreen()),
@@ -55,7 +64,7 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    AudioService.instance.stop();
+    _audio.stop();
     _controller.dispose();
     super.dispose();
   }
@@ -104,7 +113,7 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
             Expanded(
               child: PageView.builder(
                 controller: _controller,
-                onPageChanged: (i) => setState(() => _index = i),
+                onPageChanged: _onPageChanged,
                 itemCount: introPages.length,
                 itemBuilder: (context, i) {
                   final page = introPages[i];
@@ -125,6 +134,7 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
                     child: AudioButton(
                       audioFile: introPages[_index].audio,
                       label: 'Ouvir',
+                      audioController: widget.audioController,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -205,8 +215,9 @@ class _IntroPageView extends StatelessWidget {
                 value: progressValue,
                 minHeight: 8,
                 backgroundColor: AppColors.textMuted.withValues(alpha: 0.14),
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppColors.primaryPlum),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.primaryPlum,
+                ),
               ),
             ),
             const SizedBox(height: 16),

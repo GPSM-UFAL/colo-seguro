@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
-import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/audio_button.dart';
 
 /// "Tira-dúvidas" — perguntas frequentes (expansíveis) + glossário.
 class FaqScreen extends StatelessWidget {
@@ -15,22 +15,25 @@ class FaqScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
         children: [
-          const Text('Tira-dúvidas',
-              style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDarkWarm)),
+          const Text(
+            'Tira-dúvidas',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDarkWarm,
+            ),
+          ),
           const SizedBox(height: 8),
-          const Text('Toque numa pergunta para ver a resposta.',
-              style: TextStyle(fontSize: 15, color: AppColors.textSecondary)),
+          const Text(
+            'Toque numa pergunta para ver a resposta.',
+            style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+          ),
           const SizedBox(height: 26),
           const _SectionLabel('PERGUNTAS FREQUENTES'),
           const SizedBox(height: 16),
           ...faqItems.indexed.map(
-            (entry) => _FaqTile(
-              item: entry.$2,
-              initiallyExpanded: entry.$1 == 0,
-            ),
+            (entry) =>
+                _FaqTile(item: entry.$2, initiallyExpanded: entry.$1 == 0),
           ),
           const SizedBox(height: 23),
           const _SectionLabel('PALAVRAS DIFÍCEIS'),
@@ -48,13 +51,16 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: const TextStyle(
-            fontSize: 12,
-            height: 1,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.24,
-            color: AppColors.primaryPlum));
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        height: 1,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.24,
+        color: AppColors.primaryPlum,
+      ),
+    );
   }
 }
 
@@ -92,28 +98,31 @@ class _FaqTile extends StatelessWidget {
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           iconColor: AppColors.textMutedWarm,
           collapsedIconColor: AppColors.textMutedWarm,
-          title: Text(item.question,
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textDarkWarm)),
-          children: [
-            const Divider(
-              height: 1,
-              thickness: 1,
-              color: AppColors.borderWarm,
+          title: Text(
+            item.question,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textDarkWarm,
             ),
+          ),
+          children: [
+            const Divider(height: 1, thickness: 1, color: AppColors.borderWarm),
             const SizedBox(height: 10),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(item.answer,
-                  style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.4,
-                      color: AppColors.textSecondary)),
+              child: Text(
+                item.answer,
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                  color: AppColors.textSecondary,
+                ),
+              ),
             ),
             const SizedBox(height: 10),
-            _ListenButton(label: 'Ouvir resposta', audioFile: item.audio),
+            if (item.audio != null)
+              AudioButton(label: 'Ouvir resposta', audioFile: item.audio!),
           ],
         ),
       ),
@@ -137,75 +146,26 @@ class _GlossaryTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(item.term,
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryDarker)),
-          const SizedBox(height: 6),
-          Text(item.meaning,
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.textSecondary)),
-          const SizedBox(height: 6),
-          _ListenButton(label: 'Ouvir definição', audioFile: item.audio),
-        ],
-      ),
-    );
-  }
-}
-
-class _ListenButton extends StatelessWidget {
-  const _ListenButton({required this.label, this.audioFile});
-
-  final String label;
-  final String? audioFile;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: Material(
-        color: AppColors.surfacePink,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () async {
-            if (audioFile == null) return;
-            final ok = await AudioService.instance.toggle(audioFile!);
-            if (!ok && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Áudio ainda não foi adicionado.'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
-          },
-          child: SizedBox(
-            height: 52,
-            width: double.infinity,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.volume_up_rounded,
-                  color: AppColors.primaryDark,
-                  size: 22,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppColors.primaryDarkest,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+          Text(
+            item.term,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primaryDarker,
             ),
           ),
-        ),
+          const SizedBox(height: 6),
+          Text(
+            item.meaning,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          if (item.audio != null)
+            AudioButton(label: 'Ouvir definição', audioFile: item.audio!),
+        ],
       ),
     );
   }

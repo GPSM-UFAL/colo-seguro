@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
-import '../services/audio_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/audio_button.dart';
 
 /// "Apoio" — mensagens de acolhimento e onde buscar ajuda.
 class SupportScreen extends StatelessWidget {
@@ -13,14 +13,19 @@ class SupportScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       children: [
-        const Text('Apoio',
-            style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDarkWarm)),
+        const Text(
+          'Apoio',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDarkWarm,
+          ),
+        ),
         const SizedBox(height: 8),
-        const Text('Um espaço de cuidado com você.',
-            style: TextStyle(fontSize: 15, color: AppColors.textSecondary)),
+        const Text(
+          'Um espaço de cuidado com você.',
+          style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+        ),
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
@@ -33,20 +38,31 @@ class SupportScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.favorite_rounded,
-                      color: AppColors.alert, size: 26),
+                  Icon(
+                    Icons.favorite_rounded,
+                    color: AppColors.alert,
+                    size: 26,
+                  ),
                   SizedBox(width: 14),
-                  Text(supportHighlightTitle,
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.alert)),
+                  Text(
+                    supportHighlightTitle,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.alert,
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: 12),
-              Text(supportHighlightBody,
-                  style: TextStyle(
-                      fontSize: 14, height: 1.45, color: AppColors.alert)),
+              Text(
+                supportHighlightBody,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.45,
+                  color: AppColors.alert,
+                ),
+              ),
             ],
           ),
         ),
@@ -62,7 +78,10 @@ class SupportScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        const _ListenButton(),
+        const AudioButton(
+          audioFile: 'apoio_onde_buscar_ajuda.mp3',
+          label: 'Ouvir explicação',
+        ),
       ],
     );
   }
@@ -73,55 +92,14 @@ class _Label extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-        style: const TextStyle(
-            fontSize: 12,
-            height: 1,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.24,
-            color: AppColors.primaryPlum));
-  }
-}
-
-class _ListenButton extends StatelessWidget {
-  const _ListenButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Ouvir explicação',
-      child: Material(
-        color: AppColors.surfacePink,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () =>
-              AudioService.instance.toggle('apoio_onde_buscar_ajuda.mp3'),
-          child: const SizedBox(
-            height: 52,
-            width: double.infinity,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.volume_up_rounded,
-                  color: AppColors.primaryDark,
-                  size: 22,
-                ),
-                SizedBox(width: 10),
-                Text(
-                  'Ouvir explicação',
-                  style: TextStyle(
-                    color: AppColors.primaryDarkest,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        height: 1,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.24,
+        color: AppColors.primaryPlum,
       ),
     );
   }
