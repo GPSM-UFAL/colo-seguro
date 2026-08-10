@@ -50,25 +50,6 @@ class SupportScreen extends StatelessWidget {
             ],
           ),
         ),
-        // const SizedBox(height: 38),
-        // const _Label('MENSAGENS PARA VOCÊ'),
-        // const SizedBox(height: 14),
-        // ...supportMessages.map((m) => Container(
-        //       height: 46,
-        //       margin: const EdgeInsets.only(bottom: 8),
-        //       padding: const EdgeInsets.symmetric(horizontal: 16),
-        //       alignment: Alignment.centerLeft,
-        //       decoration: BoxDecoration(
-        //         color: AppColors.surfaceLavender,
-        //         borderRadius: BorderRadius.circular(12),
-        //       ),
-        //       child: Text(m,
-        //           style: const TextStyle(
-        //               fontSize: 15,
-        //               fontWeight: FontWeight.w500,
-        //               color: AppColors.primaryDarker)),
-        //     )),
-        // const SizedBox(height: 4),
         const SizedBox(height: 38),
         const _Label('ONDE BUSCAR AJUDA'),
         const SizedBox(height: 20),
@@ -115,7 +96,8 @@ class _ListenButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => AudioService.instance.toggle('apoio_onde_buscar_ajuda.mp3'),
+          onTap: () =>
+              AudioService.instance.toggle('apoio_onde_buscar_ajuda.mp3'),
           child: const SizedBox(
             height: 52,
             width: double.infinity,

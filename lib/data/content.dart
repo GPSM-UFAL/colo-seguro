@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 ///   1) Os textos de cada tela (retirados do Figma e do fluxograma).
 ///   2) O campo `audio`       -> nome do .mp3 em assets/audio/
 ///   3) O campo `illustration`-> nome da imagem em assets/illustrations/
-///   4) A ÁRVORE DE DECISÃO da jornada da paciente (motor `journeyForOnboarding`).
+///   4) A ÁRVORE DE DECISÃO da jornada da paciente.
 ///
 /// Para mudar conteúdo, áudio ou ilustração, edite SÓ este arquivo.
 /// ===================================================================
@@ -109,7 +109,7 @@ const String onboardingTitle = 'Onde você está agora?';
 const String onboardingSubtitle =
     'Toque na etapa em que você está. O app guarda apenas esta escolha neste aparelho para não perder seu progresso.';
 
-/// As opções estão na MESMA ordem usada pelo motor `journeyForOnboarding`.
+/// As opções estão na mesma ordem usada por `currentStepIndexForOnboarding`.
 const List<String> onboardingOptions = [
   'Fiz o exame preventivo Papanicolau ou Teste DNA HPV', // 0
   'Recebi um resultado alterado no exame de triagem preventivo', // 1
@@ -196,11 +196,6 @@ const Map<String, StepContent> stepContents = {
           StepSection('O que é o Papanicolau',
               'O preventivo, ou Papanicolau, é um exame simples feito no posto. A enfermeira coleta uma pequena amostra do colo do útero através de uma escovinha, sem dor, para ver se está tudo bem.',
               audioFile: 'coleta_papanicolau_o_que_e.mp3'),
-          // StepSection(
-          //   'Como funciona',
-          //   'Você se deita como no preventivo. A profissional usa um pequeno instrumento para visualizar o colo do útero e coleta a amostra com uma escovinha ou espátula. Pode causar um leve incômodo, mas costuma ser rápido.',
-          //   audioFile: 'coleta_papanicolau_como_funciona.mp3',
-          // ),
           StepSection(
             'Requisitos para o exame',
             '• Evite relações sexuais, inclusive com camisinha, de 24 a 48 horas antes.\n• Não use duchas vaginais, cremes, óvulos ou lubrificantes nos 2 dias anteriores.\n• Não esteja menstruada. O ideal é fazer de 5 a 7 dias depois que o sangramento terminar.',
@@ -219,11 +214,6 @@ const Map<String, StepContent> stepContents = {
             'É um exame feito com a coleta no colo do útero. Ele procura sinais do HPV, vírus que pode causar alterações antes de virar doença.',
             audioFile: 'coleta_dna_hpv_o_que_e.mp3',
           ),
-          // StepSection(
-          //   'Por que ele é importante',
-          //   'Quando encontra o vírus cedo, a equipe consegue acompanhar melhor e evitar problemas no futuro. A coleta é parecida com a do preventivo.',
-          //   audioFile: 'coleta_dna_hpv_importancia.mp3',
-          // ),
           StepSection(
             'Requisitos para o exame',
             '• Evite relações sexuais, inclusive com camisinha, de 24 a 48 horas antes.\n• Não use duchas vaginais, cremes, óvulos ou lubrificantes nos 2 dias anteriores.\n• Não esteja menstruada. O ideal é fazer de 5 a 7 dias depois que o sangramento terminar.\n• Avise a profissional se estiver grávida ou se houver suspeita de gravidez.',
@@ -287,49 +277,6 @@ const Map<String, StepContent> stepContents = {
         audioFile: 'coleta_papanicolau_requisitos.mp3',
       ),
     ],
-    // tabs: [
-    //   CollectionTabContent(
-    //     id: 'colposcopia',
-    //     label: 'Colposcopia',
-    //     tip:
-    //         'Não esqueça de levar o encaminhamento para o centro especializado, assim como o resultado da citologia ou do Teste DNA HPV feito anteriormente.',
-    //     sections: [
-    //       StepSection(
-    //         'O que é a colposcopia',
-    //         'É um exame em que o médico usa um aparelho com luz e lente para ver o colo do útero bem de perto. Não corta e não entra no corpo.',
-    //         audioFile: 'colposcopia_o_que_e.mp3',
-    //       ),
-    //       StepSection(
-    //         'Como funciona',
-    //         'Você fica deitada, como no preventivo. Pode sentir um leve incômodo e dura poucos minutos. Às vezes o médico coleta um pedacinho (semelhante a um grão de areia) para examinar em uma outra etapa chamada Biópsia',
-    //         audioFile: 'colposcopia_como_funciona.mp3',
-    //       ),
-    //       StepSection(
-    //         'Requisitos para o exame',
-    //         '• Evite relações sexuais, inclusive com camisinha, de 24 a 48 horas antes.\n• Não use duchas vaginais, cremes, óvulos ou lubrificantes vaginais nos 2 dias anteriores.\n• Não esteja menstruada. O ideal é realizar o exame de 5 a 7 dias após o término do sangramento.\n• Informe ao médico caso esteja grávida ou com suspeita de gravidez.',
-    //         audioFile: 'colposcopia_requisitos.mp3',
-    //       ),
-    //     ],
-    //   ),
-    //   CollectionTabContent(
-    //     id: 'biopsia',
-    //     label: 'Biópsia',
-    //     tip:
-    //         'Depois da biópsia, aguarde o resultado e siga a orientação da equipe.',
-    //     sections: [
-    //       StepSection(
-    //         'O que é a biópsia',
-    //         'Se o médico encontrar qualquer área suspeita durante a colposcopia, ele retira um pedacinho de tecido, semelhante ao tamanho de um grão de areia, para confirmar o diagnóstico em laboratório.',
-    //         audioFile: 'biopsia_o_que_e.mp3',
-    //       ),
-    //       StepSection(
-    //         'Como funciona',
-    //         'Você fica deitada, como no preventivo. Pode sentir um leve incômodo e dura poucos minutos. Às vezes o médico coleta um pedacinho para examinar.',
-    //         audioFile: 'biopsia_como_funciona.mp3',
-    //       ),
-    //     ],
-    //   ),
-    // ],
     tip:
         'Não esqueça de levar o encaminhamento para o centro especializado, assim como o resultado da citologia ou teste de DNA HPV feito anteriormente',
     audio: 'etapa_colposcopia.mp3',
@@ -507,81 +454,6 @@ JourneyPlan journeyForCurrentStepIndex(int index) {
   );
 }
 
-/// Recebe o índice escolhido no onboarding e devolve a jornada.
-JourneyPlan journeyForOnboarding(int index) {
-  switch (index) {
-    case 0: // Fiz o exame preventivo -> aguardando resultado
-      return JourneyPlan(
-        currentStepIndex: 1,
-        headline: 'Você fez o preventivo. Agora é aguardar o resultado.',
-        steps: [
-          _p('primeiros-cuidados', StepStatus.done, 'Concluído'),
-          _p('resultado', StepStatus.current, 'Você está aqui'),
-          _p('encaminhamento', StepStatus.next, 'Próxima etapa'),
-          _p('colposcopia', StepStatus.later, 'Depois'),
-          _p('biopsia', StepStatus.later, 'Depois'),
-          _p('acompanhamento', StepStatus.later, 'Depois'),
-        ],
-      );
-    case 1: // Recebi um resultado alterado
-    case 2: // Fui encaminhada a outro serviço
-      return JourneyPlan(
-        currentStepIndex: 2,
-        headline:
-            'Seu exame teve uma alteração. Vamos juntas no próximo passo.',
-        steps: [
-          _p('primeiros-cuidados', StepStatus.done, 'Concluído'),
-          _p('resultado', StepStatus.done, 'Concluído'),
-          _p('encaminhamento', StepStatus.current, 'Você está aqui'),
-          _p('colposcopia', StepStatus.next, 'Próxima etapa'),
-          _p('biopsia', StepStatus.later, 'Depois'),
-          _p('acompanhamento', StepStatus.later, 'Depois'),
-        ],
-      );
-    case 3: // Vou fazer a colposcopia
-      return JourneyPlan(
-        currentStepIndex: 3,
-        headline:
-            'A colposcopia é o seu próximo passo. Saber o que esperar ajuda.',
-        steps: [
-          _p('primeiros-cuidados', StepStatus.done, 'Concluído'),
-          _p('resultado', StepStatus.done, 'Concluído'),
-          _p('encaminhamento', StepStatus.done, 'Concluído'),
-          _p('colposcopia', StepStatus.current, 'Você está aqui'),
-          _p('biopsia', StepStatus.next, 'Próxima etapa'),
-          _p('acompanhamento', StepStatus.later, 'Depois'),
-        ],
-      );
-    case 4:
-      return JourneyPlan(
-        currentStepIndex: 4,
-        headline: 'Você já fez a colposcopia. Agora é o acompanhamento.',
-        steps: [
-          _p('primeiros-cuidados', StepStatus.done, 'Concluído'),
-          _p('resultado', StepStatus.done, 'Concluído'),
-          _p('encaminhamento', StepStatus.done, 'Concluído'),
-          _p('colposcopia', StepStatus.done, 'Concluído'),
-          _p('biopsia', StepStatus.current, 'Você está aqui'),
-          _p('acompanhamento', StepStatus.next, 'Próxima etapa'),
-        ],
-      );
-    case 5: // Não sei — quero ver tudo
-    default:
-      return JourneyPlan(
-        currentStepIndex: 0,
-        headline: 'Veja o caminho completo, com calma.',
-        steps: [
-          _p('primeiros-cuidados', StepStatus.current, 'Comece por aqui'),
-          _p('resultado', StepStatus.next, 'Próxima etapa'),
-          _p('encaminhamento', StepStatus.later, 'Depois'),
-          _p('colposcopia', StepStatus.later, 'Depois'),
-          _p('biopsia', StepStatus.later, 'Depois'),
-          _p('acompanhamento', StepStatus.later, 'Depois'),
-        ],
-      );
-  }
-}
-
 /// ---------- Tira-dúvidas ----------
 class FaqItem {
   final String question;
@@ -626,23 +498,3 @@ const List<GlossaryItem> glossary = [
 const String supportHighlightTitle = 'Sentir medo é normal';
 const String supportHighlightBody =
     'Respire fundo. Você está cuidando de você e isso já é coragem.';
-
-const List<String> supportMessages = [
-  'Um passo de cada vez.',
-  'Você não está sozinha.',
-  'Pedir ajuda é se cuidar.',
-];
-
-class SupportContact {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  const SupportContact(this.title, this.subtitle, this.icon);
-}
-
-const List<SupportContact> supportContacts = [
-  SupportContact('Unidade de referência',
-      'Procure o posto onde você se consulta.', Icons.location_on_rounded),
-  SupportContact('Disque Saúde — 136',
-      'Ligação gratuita do Ministério da Saúde.', Icons.phone_rounded),
-];

@@ -194,8 +194,6 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
               ),
               child: Row(
                 children: [
-                  // Icon(Icons.description_outlined,
-                  //     color: tipIconColor, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(tip,

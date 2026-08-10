@@ -26,19 +26,6 @@ class AppIllustration extends StatelessWidget {
     return SizedBox(
       height: height,
       width: double.infinity,
-      // Configurações abaixo desenhavam o quadrado rosa em volta da imagem.
-      // clipBehavior: Clip.antiAlias,
-      // decoration: BoxDecoration(
-      //   color: AppColors.surfaceSoft,
-      //   borderRadius: BorderRadius.circular(28),
-      //   boxShadow: [
-      //     BoxShadow(
-      //       color: Colors.black.withValues(alpha: 0.06),
-      //       blurRadius: 24,
-      //       offset: const Offset(0, 8),
-      //     ),
-      //   ],
-      // ),
       child: imageName == null
           ? _Placeholder(icon: fallbackIcon)
           : Padding(
