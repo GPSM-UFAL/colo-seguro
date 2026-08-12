@@ -20,22 +20,21 @@ Para rodar em um device específico: `flutter devices` e depois `flutter run -d 
 
 ## Como a jornada funciona (árvore de decisão)
 
-A jornada **não é fixa** — ela segue o fluxograma do projeto. Na tela "Onde você está agora?" a paciente escolhe sua situação, e o app monta **só o caminho dela**:
+A jornada segue o fluxograma do projeto. Na tela "Onde você está agora?" a pessoa escolhe sua situação, e o app persiste uma identidade estável para a etapa atual:
 
-- resultado normal → volta à rotina;
-- alteração leve → repetir o preventivo;
-- alteração importante → encaminhamento → colposcopia → acompanhamento.
+- coleta do preventivo → resultado → encaminhamento → colposcopia;
+- biópsia solicitada → biópsia → acompanhamento;
+- biópsia não solicitada → acompanhamento, com a biópsia marcada como "não necessária".
 
-Quem escolhe "Não sei — quero ver tudo" cai na tela **Todos os caminhos**, que espelha o fluxograma completo (incluindo os caminhos do Teste de HPV). Essa tela também fica acessível pelo botão "Ver todos os caminhos" na Jornada.
+Quem escolhe "Não sei — quero ver tudo" entra no **Modo de exploração**: vê todas as etapas sem marcar ou alterar seu progresso. Se já existia uma etapa atual, ela é preservada.
 
-Toda a lógica e os textos estão em `lib/data/content.dart`:
+As responsabilidades ficam separadas:
 
-- `stepContents` — os nós (etapas) do fluxograma;
-- `currentStepIndexForOnboarding(index)` — converte a escolha inicial em etapa;
-- `journeyForCurrentStepIndex(index)` — monta a jornada a partir da etapa atual;
-- `allPaths` / `hpvPaths` — o conteúdo da tela "Todos os caminhos".
+- `lib/data/content.dart` — textos e conteúdo das etapas;
+- `lib/services/journey_session.dart` — restauração, migração, transições, persistência e construção da jornada;
+- `CONTEXT.md` — vocabulário e invariantes do cuidado.
 
-Para mudar o fluxo (ex.: novo protocolo), edite só esse arquivo.
+A `JourneySession` publica estados prontos para as telas e só altera o estado visível depois que a nova etapa foi persistida com sucesso.
 
 ## Onde colocar as ilustrações
 
@@ -62,7 +61,8 @@ Enquanto um áudio não existir, o app não quebra: mostra um aviso discreto.
 lib/
   main.dart                  # entrada do app
   theme/app_theme.dart       # cores e fonte (tokens do Figma)
-  services/audio_service.dart# tocador de áudio (just_audio)
+  services/audio_service.dart # tocador de áudio (just_audio)
+  services/journey_session.dart # estado, persistência e plano da jornada
   data/content.dart          # TODOS os textos + nomes dos áudios
   widgets/
     audio_button.dart        # botão "Ouvir explicação" reutilizável
@@ -74,7 +74,7 @@ lib/
     onboarding_screen.dart       # "Onde você está agora?" (define o caminho)
     home_shell.dart              # barra inferior (Jornada/Dúvidas/Apoio)
     journey_screen.dart          # jornada personalizada (só o caminho dela)
-    all_paths_screen.dart        # fluxograma completo ("todos os caminhos")
+    post_colposcopy_decision_screen.dart # decisão condicional da biópsia
     step_detail_screen.dart      # detalhe de cada etapa
     faq_screen.dart              # tira-dúvidas + glossário
     support_screen.dart          # apoio

@@ -7,9 +7,9 @@ import 'package:flutter/material.dart';
 ///   1) Os textos de cada tela (retirados do Figma e do fluxograma).
 ///   2) O campo `audio`       -> nome do .mp3 em assets/audio/
 ///   3) O campo `illustration`-> nome da imagem em assets/illustrations/
-///   4) A ÁRVORE DE DECISÃO da jornada da paciente.
 ///
-/// Para mudar conteúdo, áudio ou ilustração, edite SÓ este arquivo.
+/// Para mudar conteúdo, áudio ou ilustração, edite este arquivo. As regras de
+/// progresso e a árvore de decisão ficam em `services/journey_session.dart`.
 /// ===================================================================
 
 /// ---------- Carrossel de introdução (telas 0 a 5) ----------
@@ -107,16 +107,60 @@ Esse material será enviado a um laboratório de patologia. Depois de pronto, vo
 /// ---------- Onboarding "Onde você está" ----------
 const String onboardingTitle = 'Onde você está agora?';
 const String onboardingSubtitle =
-    'Toque na etapa em que você está. O app guarda apenas esta escolha neste aparelho para não perder seu progresso.';
+    'Toque na etapa em que você está. O app guarda apenas sua etapa atual neste aparelho para não perder seu progresso.';
 
-/// As opções estão na mesma ordem usada por `currentStepIndexForOnboarding`.
-const List<String> onboardingOptions = [
-  'Fiz o exame preventivo Papanicolau ou Teste DNA HPV', // 0
-  'Recebi um resultado alterado no exame de triagem preventivo', // 1
-  'Fui encaminhada a outro serviço', // 2
-  'Vou fazer a colposcopia', // 3
-  'Já fiz a colposcopia', // 4
-  'Não sei — quero ver tudo', // 5 (modo explorar todos os caminhos)
+enum OnboardingAnswer {
+  preventiveCollected,
+  alteredResult,
+  referred,
+  awaitingColposcopy,
+  postColposcopy,
+  explore,
+}
+
+class OnboardingOption {
+  final OnboardingAnswer answer;
+  final String label;
+  final IconData icon;
+
+  const OnboardingOption({
+    required this.answer,
+    required this.label,
+    required this.icon,
+  });
+}
+
+const List<OnboardingOption> onboardingOptions = [
+  OnboardingOption(
+    answer: OnboardingAnswer.preventiveCollected,
+    label: 'Fiz o exame preventivo Papanicolau ou Teste DNA HPV',
+    icon: Icons.assignment_outlined,
+  ),
+  OnboardingOption(
+    answer: OnboardingAnswer.alteredResult,
+    label: 'Recebi um resultado alterado no exame de triagem preventivo',
+    icon: Icons.favorite_outline_rounded,
+  ),
+  OnboardingOption(
+    answer: OnboardingAnswer.referred,
+    label: 'Fui encaminhada a outro serviço',
+    icon: Icons.local_hospital_outlined,
+  ),
+  OnboardingOption(
+    answer: OnboardingAnswer.awaitingColposcopy,
+    label: 'Vou fazer a colposcopia',
+    icon: Icons.search_rounded,
+  ),
+  OnboardingOption(
+    answer: OnboardingAnswer.postColposcopy,
+    label: 'Já fiz a colposcopia',
+    icon: Icons.assignment_turned_in_outlined,
+  ),
+  OnboardingOption(
+    answer: OnboardingAnswer.explore,
+    label: 'Não sei — quero ver tudo',
+    icon: Icons.help_outline_rounded,
+  ),
 ];
 
 /// ===================================================================
@@ -167,16 +211,6 @@ class StepContent {
     required this.illustration,
   });
 }
-
-/// Ícones de cada opção do onboarding (mesma ordem de onboardingOptions).
-const List<IconData> onboardingIcons = [
-  Icons.assignment_outlined, // Fiz o exame preventivo
-  Icons.favorite_outline_rounded, // Recebi um resultado alterado
-  Icons.local_hospital_outlined, // Fui encaminhada a outro serviço
-  Icons.search_rounded, // Vou fazer a colposcopia
-  Icons.assignment_turned_in_outlined, // Já fiz a colposcopia
-  Icons.help_outline_rounded, // Não sei — quero ver tudo
-];
 
 /// Mapa central de todos os nós do fluxograma.
 const Map<String, StepContent> stepContents = {
@@ -351,108 +385,6 @@ const Map<String, StepContent> stepContents = {
     illustration: 'etapa_resultado.png',
   ),
 };
-
-/// ===================================================================
-/// MOTOR DA JORNADA — monta o caminho da paciente conforme o perfil
-/// ===================================================================
-enum StepStatus { done, current, next, later }
-
-class PlannedStep {
-  final StepContent content;
-  final StepStatus status;
-  final String statusLabel; // "Concluído", "Você está aqui"...
-  const PlannedStep(this.content, this.status, this.statusLabel);
-}
-
-class JourneyPlan {
-  final String headline;
-  final int currentStepIndex;
-  final List<PlannedStep> steps;
-  const JourneyPlan({
-    required this.headline,
-    required this.currentStepIndex,
-    required this.steps,
-  });
-}
-
-PlannedStep _p(String id, StepStatus s, String label) =>
-    PlannedStep(stepContents[id]!, s, label);
-
-const List<String> _journeyStepIds = [
-  'primeiros-cuidados',
-  'resultado',
-  'encaminhamento',
-  'colposcopia',
-  'biopsia',
-  'acompanhamento',
-];
-
-int currentStepIndexForOnboarding(int index) {
-  switch (index) {
-    case 0:
-      return 1;
-    case 1:
-    case 2:
-      return 2;
-    case 3:
-      return 3;
-    case 4:
-      return 4;
-    case 5:
-    default:
-      return 0;
-  }
-}
-
-String _headlineForCurrentStep(int index) {
-  switch (index) {
-    case 0:
-      return 'Veja o caminho completo, com calma.';
-    case 1:
-      return 'Você fez o preventivo. Agora é aguardar o resultado.';
-    case 2:
-      return 'Seu exame teve uma alteração. Vamos juntas no próximo passo.';
-    case 3:
-      return 'A colposcopia é o seu próximo passo. Saber o que esperar ajuda.';
-    case 4:
-      return 'Você já fez a colposcopia. Agora é o acompanhamento.';
-    case 5:
-    default:
-      return 'Você chegou ao acompanhamento. O cuidado continua.';
-  }
-}
-
-String _statusLabelForStep(int stepIndex, int currentStepIndex) {
-  if (stepIndex < currentStepIndex) return 'Concluído';
-  if (stepIndex == currentStepIndex) {
-    return currentStepIndex == 0 ? 'Comece por aqui' : 'Você está aqui';
-  }
-  if (stepIndex == currentStepIndex + 1) return 'Próxima etapa';
-  return 'Depois';
-}
-
-StepStatus _statusForStep(int stepIndex, int currentStepIndex) {
-  if (stepIndex < currentStepIndex) return StepStatus.done;
-  if (stepIndex == currentStepIndex) return StepStatus.current;
-  if (stepIndex == currentStepIndex + 1) return StepStatus.next;
-  return StepStatus.later;
-}
-
-JourneyPlan journeyForCurrentStepIndex(int index) {
-  final currentStepIndex = index.clamp(0, _journeyStepIds.length - 1).toInt();
-
-  return JourneyPlan(
-    headline: _headlineForCurrentStep(currentStepIndex),
-    currentStepIndex: currentStepIndex,
-    steps: List.generate(_journeyStepIds.length, (i) {
-      return _p(
-        _journeyStepIds[i],
-        _statusForStep(i, currentStepIndex),
-        _statusLabelForStep(i, currentStepIndex),
-      );
-    }),
-  );
-}
 
 /// ---------- Tira-dúvidas ----------
 class FaqItem {

@@ -26,17 +26,21 @@ class PrimaryButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         onTap: onPressed,
         child: Container(
-          height: 58,
+          constraints: const BoxConstraints(minHeight: 58),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           alignment: Alignment.center,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.textOnPrimary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textOnPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               if (icon != null) ...[

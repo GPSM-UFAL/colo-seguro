@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../data/content.dart';
 import '../services/audio_service.dart';
-import '../services/journey_progress_store.dart';
+import '../services/journey_session.dart';
 import '../theme/app_theme.dart';
-import 'journey_screen.dart';
 import 'faq_screen.dart';
-import 'onboarding_screen.dart';
+import 'journey_screen.dart';
 import 'support_screen.dart';
 
-/// Casca com a barra inferior: Caminho · Dúvidas · Apoio.
+/// Shell with the bottom navigation: Caminho · Dúvidas · Apoio.
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.currentStepIndex});
+  const HomeShell({super.key, required this.journey});
 
-  final int currentStepIndex;
+  final JourneySession journey;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -21,8 +19,6 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _index = 0;
-  late int _currentStepIndex = widget.currentStepIndex;
-  late JourneyPlan _plan = journeyForCurrentStepIndex(_currentStepIndex);
 
   @override
   void initState() {
@@ -38,47 +34,44 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     }
   }
 
-  /// Reabre a tela "Onde você está agora?" e remonta o caminho.
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  Future<void> _changeSituation() async {
-    final index = await Navigator.of(context).push<int>(
-      MaterialPageRoute(builder: (_) => const OnboardingScreen(asPicker: true)),
-    );
-    if (index != null) {
-      await JourneyProgressStore.saveSituationIndex(index);
-      if (!mounted) return;
-      setState(() {
-        _currentStepIndex = currentStepIndexForOnboarding(index);
-        _plan = journeyForCurrentStepIndex(_currentStepIndex);
-      });
-    }
-  }
-
   Future<void> _advanceStep() async {
-    if (_currentStepIndex >= _plan.steps.length - 1) return;
-
-    final nextStepIndex = _currentStepIndex + 1;
-    await JourneyProgressStore.saveCurrentStepIndex(nextStepIndex);
+    final result = await widget.journey.advance();
     if (!mounted) return;
-
-    setState(() {
-      _currentStepIndex = nextStepIndex;
-      _plan = journeyForCurrentStepIndex(_currentStepIndex);
-    });
+    if (result case JourneyActionFailed(:final message)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final view = widget.journey.view;
+    final plan = switch (view) {
+      ActiveJourneyView(:final plan) => plan,
+      ExplorationView(:final plan) => plan,
+      _ => throw StateError('HomeShell requires a renderable journey.'),
+    };
+    final exploration = view is ExplorationView ? view : null;
+    final isExploration = exploration != null;
+
     final pages = [
       JourneyScreen(
-        plan: _plan,
-        onChangeSituation: _changeSituation,
-        onAdvanceStep: _advanceStep,
+        plan: plan,
+        onChangeSituation:
+            isExploration ? null : widget.journey.beginCurrentStageSelection,
+        onDefineCurrentStage:
+            isExploration ? widget.journey.beginCurrentStageSelection : null,
+        onReturnToJourney: exploration?.hasPreservedProgress == true
+            ? widget.journey.returnToActiveJourney
+            : null,
+        onAdvanceStep: plan.canAdvance ? _advanceStep : null,
       ),
       const FaqScreen(),
       const SupportScreen(),
@@ -119,10 +112,10 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           ),
           child: NavigationBar(
             selectedIndex: _index,
-            onDestinationSelected: (i) {
-                AudioService.instance.stop();
-                setState(() => _index = i);
-              },
+            onDestinationSelected: (index) {
+              AudioService.instance.stop();
+              setState(() => _index = index);
+            },
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             destinations: const [
               NavigationDestination(

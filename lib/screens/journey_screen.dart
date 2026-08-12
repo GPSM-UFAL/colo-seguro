@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 
-import '../data/content.dart';
+import '../services/journey_session.dart';
 import '../theme/app_theme.dart';
 import 'step_detail_screen.dart';
 
-/// "Meu caminho" — mostra SÓ o caminho da paciente (definido no onboarding).
+/// Renders either the person's care journey or the read-only stage catalogue.
 class JourneyScreen extends StatelessWidget {
   const JourneyScreen({
     super.key,
     required this.plan,
     this.onChangeSituation,
+    this.onDefineCurrentStage,
+    this.onReturnToJourney,
     this.onAdvanceStep,
   });
 
   final JourneyPlan plan;
   final VoidCallback? onChangeSituation;
+  final VoidCallback? onDefineCurrentStage;
+  final VoidCallback? onReturnToJourney;
   final VoidCallback? onAdvanceStep;
 
   void _openStep(
@@ -26,7 +30,8 @@ class JourneyScreen extends StatelessWidget {
           statusLabel: step.statusLabel,
           stepNumber: number,
           totalSteps: total,
-          breadcrumbLabel: 'Meu caminho',
+          breadcrumbLabel:
+              plan.isExploration ? 'Todas as etapas' : 'Meu caminho',
         ),
       ),
     );
@@ -34,46 +39,167 @@ class JourneyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isExploration = plan.isExploration;
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text('Meu caminho',
-                  style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textDarkWarm)),
+        if (isExploration) ...[
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (onReturnToJourney != null)
+                _ReturnToJourneyButton(onTap: onReturnToJourney!),
+              _ChangeButton(
+                onTap: onDefineCurrentStage,
+                label: 'Definir onde estou',
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'Todas as etapas',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textDarkWarm,
             ),
-            _ChangeButton(onTap: onChangeSituation),
-          ],
-        ),
+          ),
+        ] else
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 8,
+            children: [
+              const Text(
+                'Meu caminho',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDarkWarm,
+                ),
+              ),
+              _ChangeButton(onTap: onChangeSituation, label: 'Mudar'),
+            ],
+          ),
         const SizedBox(height: 6),
         Text(plan.headline,
             style:
                 const TextStyle(fontSize: 15, color: AppColors.textSecondary)),
         const SizedBox(height: 24),
-        ...List.generate(plan.steps.length, (i) {
-          return _TimelineTile(
-            step: plan.steps[i],
-            isLast: i == plan.steps.length - 1,
-            onOpen: () =>
-                _openStep(context, plan.steps[i], i + 1, plan.steps.length),
-            onAdvance: i == plan.currentStepIndex &&
-                    i < plan.steps.length - 1
-                ? onAdvanceStep
-                : null,
-          );
-        }),
+        if (isExploration)
+          ...List.generate(plan.steps.length, (index) {
+            final step = plan.steps[index];
+            return _ExplorationListItem(
+              step: step,
+              onOpen: () => _openStep(
+                context,
+                step,
+                index + 1,
+                plan.steps.length,
+              ),
+            );
+          })
+        else
+          ...List.generate(plan.steps.length, (index) {
+            final step = plan.steps[index];
+            return _TimelineTile(
+              step: step,
+              isLast: index == plan.steps.length - 1,
+              onOpen: () => _openStep(
+                context,
+                step,
+                index + 1,
+                plan.steps.length,
+              ),
+              onAdvance: step.status == JourneyStepStatus.current
+                  ? onAdvanceStep
+                  : null,
+            );
+          }),
+      ],
+    );
+  }
+}
+
+class _ReturnToJourneyButton extends StatelessWidget {
+  const _ReturnToJourneyButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.arrow_back_rounded,
+              size: 20,
+              color: AppColors.primaryPlum,
+            ),
+            SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'Voltar ao meu caminho',
+                style: TextStyle(
+                  color: AppColors.primaryPlum,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExplorationListItem extends StatelessWidget {
+  const _ExplorationListItem({required this.step, required this.onOpen});
+
+  final PlannedStep step;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+          title: Text(
+            step.content.title,
+            style: const TextStyle(
+              color: AppColors.textDarkWarm,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          trailing: const Icon(
+            Icons.chevron_right_rounded,
+            color: AppColors.textMutedWarm,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          onTap: onOpen,
+        ),
+        const Divider(height: 1, color: AppColors.borderWarm),
       ],
     );
   }
 }
 
 class _ChangeButton extends StatelessWidget {
-  const _ChangeButton({this.onTap});
+  const _ChangeButton({this.onTap, required this.label});
   final VoidCallback? onTap;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -82,8 +208,8 @@ class _ChangeButton extends StatelessWidget {
       onPressed: onTap,
       icon: const Icon(Icons.edit_rounded,
           size: 16, color: AppColors.primaryPlum),
-      label: const Text('Mudar',
-          style: TextStyle(
+      label: Text(label,
+          style: const TextStyle(
               color: AppColors.primaryPlum, fontWeight: FontWeight.w600)),
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -109,50 +235,51 @@ class _TimelineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCurrent = step.status == StepStatus.current;
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Linha do tempo (bolinha + traço)
-          Column(
-            children: [
-              _TimelineDot(status: step.status),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                      width: 2,
-                      color: AppColors.textMutedWarm.withValues(alpha: 0.45)),
-                ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 18),
-              child: isCurrent
-                  ? _CurrentCard(
-                      step: step,
-                      onOpen: onOpen,
-                      onAdvance: onAdvance,
-                    )
-                  : _PlainRow(step: step, onOpen: onOpen),
+    final isCurrent = step.status == JourneyStepStatus.current;
+    return Stack(
+      children: [
+        if (!isLast)
+          Positioned(
+            left: 13,
+            top: 28,
+            bottom: 0,
+            child: Container(
+              width: 2,
+              color: AppColors.textMutedWarm.withValues(alpha: 0.45),
             ),
           ),
-        ],
-      ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _TimelineDot(status: step.status),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: isCurrent
+                    ? _CurrentCard(
+                        step: step,
+                        onOpen: onOpen,
+                        onAdvance: onAdvance,
+                      )
+                    : _PlainRow(step: step, onOpen: onOpen),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
 class _TimelineDot extends StatelessWidget {
   const _TimelineDot({required this.status});
-  final StepStatus status;
+  final JourneyStepStatus status;
 
   @override
   Widget build(BuildContext context) {
     switch (status) {
-      case StepStatus.done:
+      case JourneyStepStatus.completed:
         return Container(
           width: 28,
           height: 28,
@@ -161,7 +288,7 @@ class _TimelineDot extends StatelessWidget {
           child: const Icon(Icons.check_rounded,
               size: 16, color: AppColors.textOnPrimary),
         );
-      case StepStatus.current:
+      case JourneyStepStatus.current:
         // anel verde com centro branco
         return Container(
           width: 28,
@@ -194,8 +321,7 @@ class _PlainRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFuture =
-        step.status == StepStatus.next || step.status == StepStatus.later;
+    final isFuture = step.status != JourneyStepStatus.completed;
     final titleColor =
         isFuture ? AppColors.textMutedWarm : AppColors.textDarkWarm;
     final metaColor =
@@ -300,11 +426,13 @@ class _CurrentCard extends StatelessWidget {
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Entender esta etapa',
-                        style: TextStyle(
-                            color: AppColors.textOnPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600)),
+                    Flexible(
+                      child: Text('Entender esta etapa',
+                          style: TextStyle(
+                              color: AppColors.textOnPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600)),
+                    ),
                     SizedBox(width: 8),
                     Icon(Icons.arrow_forward_rounded,
                         color: AppColors.textOnPrimary, size: 18),
