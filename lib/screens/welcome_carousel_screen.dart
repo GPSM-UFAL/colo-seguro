@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../data/content.dart';
 import '../services/audio_service.dart';
+import '../services/journey_session.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_illustration.dart';
 import '../widgets/audio_button.dart';
 import '../widgets/primary_button.dart';
-import 'onboarding_screen.dart';
 
 /// Telas 0 a 5 do Figma — carrossel de boas-vindas com áudio.
 class WelcomeCarouselScreen extends StatefulWidget {
-  const WelcomeCarouselScreen({super.key, this.audioController});
+  const WelcomeCarouselScreen({
+    super.key,
+    required this.journey,
+    this.audioController,
+  });
 
+  final JourneySession journey;
   final AudioController? audioController;
 
   @override
@@ -46,7 +51,7 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
         curve: Curves.easeInOut,
       );
     } else {
-      _goToApp();
+      _finishIntroduction();
     }
   }
 
@@ -55,10 +60,16 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
     setState(() => _index = index);
   }
 
-  void _goToApp() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-    );
+  Future<void> _finishIntroduction() async {
+    if (widget.journey.isSaving) return;
+
+    final result = await widget.journey.finishIntroduction();
+    if (!mounted) return;
+    if (result case JourneyActionFailed(:final message)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
+    }
   }
 
   @override
@@ -101,7 +112,7 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
                   const Spacer(),
                   if (_index < introPages.length - 1)
                     TextButton(
-                      onPressed: _goToApp,
+                      onPressed: _finishIntroduction,
                       child: const Text(
                         'Pular',
                         style: TextStyle(color: AppColors.primaryDark),

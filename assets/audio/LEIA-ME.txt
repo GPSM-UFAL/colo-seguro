@@ -56,6 +56,9 @@ Etapas da jornada:
   etapa_colposcopia.mp3     -> Colposcopia
   etapa_acompanhamento.mp3  -> Conduta e acompanhamento
 
+Decisões da jornada:
+  depois_colposcopia.mp3    -> Depois da colposcopia
+
 ------ IMPORTANTE ------
 
 - Os textos para narração estão em lib/data/content.dart

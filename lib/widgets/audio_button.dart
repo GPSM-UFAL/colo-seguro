@@ -90,8 +90,11 @@ class _AudioButtonState extends State<AudioButton> {
                 onTap: _onTap,
                 child: Container(
                   width: compact ? null : double.infinity,
-                  height: compact ? 36 : 52,
-                  padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 0),
+                  constraints: BoxConstraints(minHeight: compact ? 36 : 52),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: compact ? 0 : 12,
+                  ),
                   alignment: Alignment.center,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -102,14 +105,27 @@ class _AudioButtonState extends State<AudioButton> {
                         size: compact ? 16 : 22,
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        playing ? 'Pausar' : widget.label,
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: compact ? 12 : 16,
-                          fontWeight: FontWeight.w600,
+                      if (compact)
+                        Text(
+                          playing ? 'Pausar' : widget.label,
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                      else
+                        Flexible(
+                          child: Text(
+                            playing ? 'Pausar' : widget.label,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

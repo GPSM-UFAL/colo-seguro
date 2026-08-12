@@ -9,6 +9,7 @@ import 'package:acolher_app/screens/faq_screen.dart';
 import 'package:acolher_app/screens/support_screen.dart';
 import 'package:acolher_app/screens/welcome_carousel_screen.dart';
 import 'package:acolher_app/services/audio_service.dart';
+import 'package:acolher_app/services/journey_session.dart';
 import 'package:acolher_app/widgets/audio_button.dart';
 
 class _FakeAudioController implements AudioController {
@@ -65,7 +66,9 @@ class _FakeAudioController implements AudioController {
 
 void main() {
   testWidgets('App inicia na tela de boas-vindas', (WidgetTester tester) async {
-    await tester.pumpWidget(const ColoSeguroApp());
+    final journey = await JourneySession.restoreForTesting();
+    addTearDown(journey.dispose);
+    await tester.pumpWidget(ColoSeguroApp(journey: journey));
     await tester.pump();
 
     expect(find.text('Vamos te acompanhar'), findsOneWidget);
@@ -161,9 +164,16 @@ void main() {
     WidgetTester tester,
   ) async {
     final audio = _FakeAudioController();
+    final journey = await JourneySession.restoreForTesting();
     addTearDown(audio.dispose);
+    addTearDown(journey.dispose);
     await tester.pumpWidget(
-      MaterialApp(home: WelcomeCarouselScreen(audioController: audio)),
+      MaterialApp(
+        home: WelcomeCarouselScreen(
+          journey: journey,
+          audioController: audio,
+        ),
+      ),
     );
     await tester.pump();
 

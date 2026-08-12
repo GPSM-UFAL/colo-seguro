@@ -1,37 +1,117 @@
 import 'package:flutter/material.dart';
 
-import 'data/content.dart';
 import 'screens/home_shell.dart';
-import 'theme/app_theme.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/post_colposcopy_decision_screen.dart';
 import 'screens/welcome_carousel_screen.dart';
-import 'services/journey_progress_store.dart';
+import 'services/journey_session.dart';
+import 'theme/app_theme.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final savedCurrentStepIndex =
-      await JourneyProgressStore.loadCurrentStepIndex();
-
-  runApp(ColoSeguroApp(savedCurrentStepIndex: savedCurrentStepIndex));
+  runApp(const ColoSeguroBootstrap());
 }
 
-class ColoSeguroApp extends StatelessWidget {
-  const ColoSeguroApp({super.key, this.savedCurrentStepIndex});
+class ColoSeguroBootstrap extends StatefulWidget {
+  const ColoSeguroBootstrap({super.key});
 
-  final int? savedCurrentStepIndex;
+  @override
+  State<ColoSeguroBootstrap> createState() => _ColoSeguroBootstrapState();
+}
+
+class _ColoSeguroBootstrapState extends State<ColoSeguroBootstrap> {
+  late Future<JourneySession> _journey = JourneySession.restore();
+
+  void _retry() {
+    setState(() => _journey = JourneySession.restore());
+  }
 
   @override
   Widget build(BuildContext context) {
-    final index = savedCurrentStepIndex;
-    final hasSavedJourney =
-        index != null && index >= 0 && index < onboardingOptions.length;
+    return FutureBuilder<JourneySession>(
+      future: _journey,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return ColoSeguroApp(journey: snapshot.requireData);
+        }
 
+        if (snapshot.hasError) {
+          return MaterialApp(
+            title: 'Colo Seguro',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            home: Scaffold(
+              body: SafeArea(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline_rounded, size: 40),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Não foi possível carregar sua jornada.',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          onPressed: _retry,
+                          child: const Text('Tentar novamente'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return MaterialApp(
+          title: 'Colo Seguro',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          home: const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class ColoSeguroApp extends StatelessWidget {
+  const ColoSeguroApp({super.key, required this.journey});
+
+  final JourneySession journey;
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Colo Seguro',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: hasSavedJourney
-          ? HomeShell(currentStepIndex: index)
-          : const WelcomeCarouselScreen(),
+      home: AnimatedBuilder(
+        animation: journey,
+        builder: (context, _) {
+          return switch (journey.view) {
+            IntroductionView() => WelcomeCarouselScreen(journey: journey),
+            OnboardingView(:final canCancel) => OnboardingScreen(
+                journey: journey,
+                canCancel: canCancel,
+              ),
+            PostColposcopyDecisionView(:final canCancel) =>
+              PostColposcopyDecisionScreen(
+                journey: journey,
+                canCancel: canCancel,
+              ),
+            ActiveJourneyView() ||
+            ExplorationView() =>
+              HomeShell(journey: journey),
+          };
+        },
+      ),
     );
   }
 }
