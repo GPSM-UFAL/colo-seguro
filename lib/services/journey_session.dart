@@ -2,22 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/content.dart';
-
-enum BiopsyRequestAnswer { requested, notRequested }
-
-enum JourneyStepStatus {
-  completed,
-  current,
-  next,
-  later,
-  mayBeNeeded,
-  notNeeded,
-  exploration,
-}
+import '../domain/journey_definition.dart';
 
 class PlannedStep {
   final StepContent content;
-  final JourneyStepStatus status;
+  final JourneyStageStatus status;
   final String statusLabel;
 
   const PlannedStep(this.content, this.status, this.statusLabel);
@@ -94,57 +83,36 @@ final class JourneyLoadFailure implements Exception {
   const JourneyLoadFailure(this.cause);
 }
 
-enum _CurrentJourneyStep {
-  preventiveCollection('coleta-do-preventivo', 0),
-  result('resultado', 1),
-  referral('encaminhamento', 2),
-  colposcopy('colposcopia', 3),
-  biopsy('biopsia', 4),
-  followUpAfterBiopsy('acompanhamento-apos-biopsia', 5),
-  followUpWithoutBiopsy('acompanhamento-sem-biopsia', 5);
-
-  const _CurrentJourneyStep(this.persistedId, this.planIndex);
-
-  final String persistedId;
-  final int planIndex;
-
-  static _CurrentJourneyStep? fromPersistedId(String value) {
-    for (final step in values) {
-      if (step.persistedId == value) return step;
-    }
-    return null;
-  }
-}
-
-/// Owns the current care-journey state and publishes views ready to render.
+/// Owns the persisted and transient session state for the care journey.
 ///
-/// Callers express user intent. Mapping, migration, transition ordering,
-/// persistence and [JourneyPlan] derivation remain inside the implementation.
+/// [JourneyDefinition] owns structural meaning. This module sequences storage,
+/// publishes views only after successful writes and keeps transient navigation.
 final class JourneySession extends ChangeNotifier {
   JourneySession._({
+    required JourneyDefinition<StepContent> definition,
     required _JourneyPreferences preferences,
     required JourneyView initialView,
-    _CurrentJourneyStep? currentStep,
-  })  : _preferences = preferences,
+    JourneyPosition? currentPosition,
+  })  : _definition = definition,
+        _preferences = preferences,
         _view = initialView,
-        _currentStep = currentStep;
+        _currentPosition = currentPosition;
 
   static const _currentStepIdKey = 'journey_current_step_id';
   static const _legacyCurrentStepIndexKey = 'journey_current_step_index';
   static const _legacySituationIndexKey = 'journey_situation_index';
   static const _introductionCompletedKey = 'introduction_completed';
 
-  static const _journeyStepIds = [
-    'primeiros-cuidados',
-    'resultado',
-    'encaminhamento',
-    'colposcopia',
-    'biopsia',
-    'acompanhamento',
-  ];
+  static final JourneyDefinition<StepContent> _appDefinition =
+      JourneyDefinition.validated(
+    stepContents.values.map(
+      (content) => EditorialEntry(content.id, content),
+    ),
+  );
 
+  final JourneyDefinition<StepContent> _definition;
   final _JourneyPreferences _preferences;
-  _CurrentJourneyStep? _currentStep;
+  JourneyPosition? _currentPosition;
   JourneyView _view;
   JourneyView? _cancelView;
   bool _isSaving = false;
@@ -178,6 +146,7 @@ final class JourneySession extends ChangeNotifier {
     _JourneyPreferences preferences,
   ) async {
     try {
+      final definition = _appDefinition;
       final hasStoredProgress = preferences.read(_currentStepIdKey) != null ||
           preferences.read(_legacyCurrentStepIndexKey) != null ||
           preferences.read(_legacySituationIndexKey) != null;
@@ -198,91 +167,79 @@ final class JourneySession extends ChangeNotifier {
 
       if (!introductionCompleted) {
         return JourneySession._(
+          definition: definition,
           preferences: preferences,
           initialView: const IntroductionView(),
         );
       }
 
-      final currentStep = await _restoreCurrentStep(preferences);
+      final currentPosition = await _restoreCurrentPosition(
+        definition,
+        preferences,
+      );
       return JourneySession._(
+        definition: definition,
         preferences: preferences,
-        currentStep: currentStep,
-        initialView: currentStep == null
+        currentPosition: currentPosition,
+        initialView: currentPosition == null
             ? const OnboardingView(canCancel: false)
-            : ActiveJourneyView(_buildActivePlan(currentStep)),
+            : ActiveJourneyView(
+                _buildActivePlan(definition, currentPosition),
+              ),
       );
     } catch (error) {
       throw JourneyLoadFailure(error);
     }
   }
 
-  static Future<_CurrentJourneyStep?> _restoreCurrentStep(
+  static Future<JourneyPosition?> _restoreCurrentPosition(
+    JourneyDefinition<StepContent> definition,
     _JourneyPreferences preferences,
   ) async {
-    final storedId = preferences.read(_currentStepIdKey);
-    if (storedId is String) {
-      final currentStep = _CurrentJourneyStep.fromPersistedId(storedId);
-      if (currentStep != null) return currentStep;
-
-      await preferences.remove(_currentStepIdKey);
-      await preferences.remove(_legacyCurrentStepIndexKey);
-      await preferences.remove(_legacySituationIndexKey);
-      return null;
-    }
-
-    _CurrentJourneyStep? migratedStep;
-    final legacyCurrentStep = preferences.read(_legacyCurrentStepIndexKey);
-    if (legacyCurrentStep is int) {
-      migratedStep = _stepForLegacyCurrentIndex(legacyCurrentStep);
-    } else {
-      final legacySituation = preferences.read(_legacySituationIndexKey);
-      if (legacySituation is int) {
-        migratedStep = _stepForLegacySituation(legacySituation);
-      }
-    }
-
-    if (migratedStep == null) {
-      await preferences.remove(_legacyCurrentStepIndexKey);
-      await preferences.remove(_legacySituationIndexKey);
-      return null;
-    }
-
-    final migrated = await preferences.writeString(
-      _currentStepIdKey,
-      migratedStep.persistedId,
+    final currentIdentity = preferences.read(_currentStepIdKey);
+    final legacyCurrentIndex = preferences.read(_legacyCurrentStepIndexKey);
+    final legacySituationIndex = preferences.read(_legacySituationIndexKey);
+    final restored = definition.restore(
+      StoredJourneyState(
+        currentIdentity: currentIdentity is String ? currentIdentity : null,
+        legacyCurrentIndex:
+            legacyCurrentIndex is int ? legacyCurrentIndex : null,
+        legacySituationIndex:
+            legacySituationIndex is int ? legacySituationIndex : null,
+      ),
     );
-    if (!migrated) {
-      throw StateError('Could not migrate journey progress.');
-    }
 
+    switch (restored) {
+      case NoJourneyProgress(:final shouldDiscardStoredValues):
+        if (shouldDiscardStoredValues) {
+          await _removeStoredProgress(preferences);
+        }
+        return null;
+      case CurrentJourneyProgress(
+          :final position,
+          :final needsCanonicalWrite,
+        ):
+        if (!needsCanonicalWrite) return position;
+
+        final migrated = await preferences.writeString(
+          _currentStepIdKey,
+          position.persistedIdentity,
+        );
+        if (!migrated) {
+          throw StateError('Could not migrate journey progress.');
+        }
+        await preferences.remove(_legacyCurrentStepIndexKey);
+        await preferences.remove(_legacySituationIndexKey);
+        return position;
+    }
+  }
+
+  static Future<void> _removeStoredProgress(
+    _JourneyPreferences preferences,
+  ) async {
+    await preferences.remove(_currentStepIdKey);
     await preferences.remove(_legacyCurrentStepIndexKey);
     await preferences.remove(_legacySituationIndexKey);
-    return migratedStep;
-  }
-
-  static _CurrentJourneyStep? _stepForLegacyCurrentIndex(int index) {
-    return switch (index) {
-      // The previous app stored index 0 for “Não sei — quero ver tudo”. It
-      // represented exploration, not a confirmed current stage.
-      0 => null,
-      1 => _CurrentJourneyStep.result,
-      2 => _CurrentJourneyStep.referral,
-      3 => _CurrentJourneyStep.colposcopy,
-      4 => _CurrentJourneyStep.biopsy,
-      5 => _CurrentJourneyStep.followUpAfterBiopsy,
-      _ => null,
-    };
-  }
-
-  static _CurrentJourneyStep? _stepForLegacySituation(int index) {
-    return switch (index) {
-      0 => _CurrentJourneyStep.result,
-      1 || 2 => _CurrentJourneyStep.referral,
-      3 => _CurrentJourneyStep.colposcopy,
-      4 => _CurrentJourneyStep.biopsy,
-      // “Não sei — quero ver tudo” was not a confirmed current step.
-      _ => null,
-    };
   }
 
   Future<JourneyActionResult> finishIntroduction() async {
@@ -310,75 +267,47 @@ final class JourneySession extends ChangeNotifier {
     }
   }
 
-  Future<JourneyActionResult> chooseSituation(OnboardingAnswer answer) async {
+  Future<JourneyActionResult> chooseSituation(
+    JourneySituation situation,
+  ) async {
     if (_isSaving) return _busyFailure;
 
-    if (answer == OnboardingAnswer.explore) {
-      _cancelView = null;
-      _view = ExplorationView(
-        plan: _buildExplorationPlan(),
-        hasPreservedProgress: _currentStep != null,
-      );
-      notifyListeners();
-      return const JourneyActionSucceeded();
-    }
-
-    if (answer == OnboardingAnswer.postColposcopy) {
-      _cancelView ??= _view;
-      _view = const PostColposcopyDecisionView(canCancel: true);
-      notifyListeners();
-      return const JourneyActionSucceeded();
-    }
-
-    final nextStep = switch (answer) {
-      OnboardingAnswer.preventiveCollected => _CurrentJourneyStep.result,
-      OnboardingAnswer.alteredResult ||
-      OnboardingAnswer.referred =>
-        _CurrentJourneyStep.referral,
-      OnboardingAnswer.awaitingColposcopy => _CurrentJourneyStep.colposcopy,
-      OnboardingAnswer.postColposcopy ||
-      OnboardingAnswer.explore =>
-        throw StateError('Handled above.'),
+    return switch (_definition.choose(situation)) {
+      ShowJourneyExploration() => _showExploration(),
+      RequestPostColposcopyDecision() => _showPostColposcopyDecision(),
+      MoveToJourneyPosition(:final position) =>
+        _commitCurrentPosition(position),
+      JourneyAlreadyComplete() => throw StateError(
+          'Choosing a situation cannot complete the journey.',
+        ),
     };
-    return _commitCurrentStep(nextStep);
   }
 
   Future<JourneyActionResult> advance() async {
     if (_isSaving) return _busyFailure;
 
-    final currentStep = _currentStep;
-    if (currentStep == null) {
+    final currentPosition = _currentPosition;
+    if (currentPosition == null) {
       return const JourneyActionFailed(
         'Defina onde você está antes de avançar.',
         canRetry: false,
       );
     }
 
-    if (currentStep == _CurrentJourneyStep.colposcopy) {
-      _cancelView = _view;
-      _view = const PostColposcopyDecisionView(canCancel: true);
-      notifyListeners();
-      return const JourneyActionSucceeded();
-    }
-
-    final nextStep = switch (currentStep) {
-      _CurrentJourneyStep.preventiveCollection => _CurrentJourneyStep.result,
-      _CurrentJourneyStep.result => _CurrentJourneyStep.referral,
-      _CurrentJourneyStep.referral => _CurrentJourneyStep.colposcopy,
-      _CurrentJourneyStep.biopsy => _CurrentJourneyStep.followUpAfterBiopsy,
-      _CurrentJourneyStep.followUpAfterBiopsy ||
-      _CurrentJourneyStep.followUpWithoutBiopsy =>
-        null,
-      _CurrentJourneyStep.colposcopy => throw StateError('Handled above.'),
+    return switch (_definition.advance(currentPosition)) {
+      MoveToJourneyPosition(:final position) =>
+        _commitCurrentPosition(position),
+      RequestPostColposcopyDecision() => _showPostColposcopyDecision(),
+      JourneyAlreadyComplete() => Future.value(
+          const JourneyActionFailed(
+            'Você já está na última etapa da jornada.',
+            canRetry: false,
+          ),
+        ),
+      ShowJourneyExploration() => throw StateError(
+          'Advancing cannot enter exploration.',
+        ),
     };
-
-    if (nextStep == null) {
-      return const JourneyActionFailed(
-        'Você já está na última etapa da jornada.',
-        canRetry: false,
-      );
-    }
-    return _commitCurrentStep(nextStep);
   }
 
   Future<JourneyActionResult> resolvePostColposcopy(
@@ -393,11 +322,11 @@ final class JourneySession extends ChangeNotifier {
       );
     }
 
-    return _commitCurrentStep(
-      answer == BiopsyRequestAnswer.requested
-          ? _CurrentJourneyStep.biopsy
-          : _CurrentJourneyStep.followUpWithoutBiopsy,
-    );
+    final outcome = _definition.resolvePostColposcopy(answer);
+    if (outcome case MoveToJourneyPosition(:final position)) {
+      return _commitCurrentPosition(position);
+    }
+    throw StateError('Resolving the post-colposcopy decision must move.');
   }
 
   void beginCurrentStageSelection() {
@@ -408,9 +337,12 @@ final class JourneySession extends ChangeNotifier {
   }
 
   void returnToActiveJourney() {
-    if (_isSaving || _currentStep == null) return;
+    final currentPosition = _currentPosition;
+    if (_isSaving || currentPosition == null) return;
     _cancelView = null;
-    _view = ActiveJourneyView(_buildActivePlan(_currentStep!));
+    _view = ActiveJourneyView(
+      _buildActivePlan(_definition, currentPosition),
+    );
     notifyListeners();
   }
 
@@ -424,32 +356,51 @@ final class JourneySession extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<JourneyActionResult> _commitCurrentStep(
-    _CurrentJourneyStep nextStep,
+  Future<JourneyActionResult> _showExploration() {
+    _cancelView = null;
+    _view = ExplorationView(
+      plan: _buildExplorationPlan(_definition),
+      hasPreservedProgress: _currentPosition != null,
+    );
+    notifyListeners();
+    return Future.value(const JourneyActionSucceeded());
+  }
+
+  Future<JourneyActionResult> _showPostColposcopyDecision() {
+    _cancelView ??= _view;
+    _view = const PostColposcopyDecisionView(canCancel: true);
+    notifyListeners();
+    return Future.value(const JourneyActionSucceeded());
+  }
+
+  Future<JourneyActionResult> _commitCurrentPosition(
+    JourneyPosition nextPosition,
   ) async {
     if (_isSaving) return _busyFailure;
 
     final previousView = _view;
-    final previousStep = _currentStep;
+    final previousPosition = _currentPosition;
     _setSaving(true);
     try {
       final saved = await _preferences.writeString(
         _currentStepIdKey,
-        nextStep.persistedId,
+        nextPosition.persistedIdentity,
       );
       if (!saved) {
         _view = previousView;
-        _currentStep = previousStep;
+        _currentPosition = previousPosition;
         return _persistenceFailure;
       }
 
-      _currentStep = nextStep;
+      _currentPosition = nextPosition;
       _cancelView = null;
-      _view = ActiveJourneyView(_buildActivePlan(nextStep));
+      _view = ActiveJourneyView(
+        _buildActivePlan(_definition, nextPosition),
+      );
       return const JourneyActionSucceeded();
     } catch (_) {
       _view = previousView;
-      _currentStep = previousStep;
+      _currentPosition = previousPosition;
       return _persistenceFailure;
     } finally {
       _setSaving(false);
@@ -469,85 +420,45 @@ final class JourneySession extends ChangeNotifier {
     'Não foi possível salvar. Tente novamente.',
   );
 
-  static JourneyPlan _buildActivePlan(_CurrentJourneyStep currentStep) {
-    final currentIndex = currentStep.planIndex;
-    return JourneyPlan(
-      headline: _headlineFor(currentStep),
-      canAdvance: currentIndex < _journeyStepIds.length - 1,
-      steps: List.generate(_journeyStepIds.length, (index) {
-        final content = stepContents[_journeyStepIds[index]]!;
-        final status = _activeStatusFor(index, currentStep);
-        return PlannedStep(content, status, _labelFor(status, currentIndex));
-      }),
-    );
-  }
-
-  static JourneyPlan _buildExplorationPlan() {
-    return JourneyPlan(
-      headline: 'Explore todos os passos, sem marcar uma etapa atual.',
-      canAdvance: false,
-      isExploration: true,
-      steps: List.generate(_journeyStepIds.length, (index) {
-        final status = index == 4
-            ? JourneyStepStatus.mayBeNeeded
-            : JourneyStepStatus.exploration;
-        return PlannedStep(
-          stepContents[_journeyStepIds[index]]!,
-          status,
-          _labelFor(status, -1),
-        );
-      }),
-    );
-  }
-
-  static JourneyStepStatus _activeStatusFor(
-    int stepIndex,
-    _CurrentJourneyStep currentStep,
+  static JourneyPlan _buildActivePlan(
+    JourneyDefinition<StepContent> definition,
+    JourneyPosition currentPosition,
   ) {
-    final currentIndex = currentStep.planIndex;
-    if (stepIndex == currentIndex) return JourneyStepStatus.current;
-
-    if (stepIndex == 4) {
-      if (currentStep == _CurrentJourneyStep.followUpWithoutBiopsy) {
-        return JourneyStepStatus.notNeeded;
-      }
-      if (currentIndex < 4) return JourneyStepStatus.mayBeNeeded;
-    }
-
-    if (stepIndex < currentIndex) return JourneyStepStatus.completed;
-    if (stepIndex == currentIndex + 1) return JourneyStepStatus.next;
-    return JourneyStepStatus.later;
+    final structure = definition.activeStructure(currentPosition);
+    return JourneyPlan(
+      headline: journeyHeadlineFor(currentPosition.visibleStage),
+      canAdvance: structure.canAdvance,
+      steps: [
+        for (final stage in structure.stages)
+          PlannedStep(
+            stage.content,
+            stage.status,
+            journeyStatusLabelFor(
+              stage.status,
+              isFirstStage: stage.id == JourneyStageId.preventiveCollection,
+            ),
+          ),
+      ],
+    );
   }
 
-  static String _labelFor(JourneyStepStatus status, int currentIndex) {
-    return switch (status) {
-      JourneyStepStatus.completed => 'Concluído',
-      JourneyStepStatus.current =>
-        currentIndex == 0 ? 'Comece por aqui' : 'Você está aqui',
-      JourneyStepStatus.next => 'Próxima etapa',
-      JourneyStepStatus.later => 'Depois',
-      JourneyStepStatus.mayBeNeeded => 'Pode ser necessária',
-      JourneyStepStatus.notNeeded => 'Biópsia não necessária',
-      JourneyStepStatus.exploration => 'Conheça esta etapa',
-    };
-  }
-
-  static String _headlineFor(_CurrentJourneyStep step) {
-    return switch (step) {
-      _CurrentJourneyStep.preventiveCollection =>
-        'Veja o caminho completo, com calma.',
-      _CurrentJourneyStep.result =>
-        'Você fez o preventivo. Agora é aguardar o resultado.',
-      _CurrentJourneyStep.referral =>
-        'Seu exame teve uma alteração. Vamos juntas no próximo passo.',
-      _CurrentJourneyStep.colposcopy =>
-        'A colposcopia é o seu próximo passo. Saber o que esperar ajuda.',
-      _CurrentJourneyStep.biopsy =>
-        'A biópsia foi solicitada. Vamos entender esta etapa.',
-      _CurrentJourneyStep.followUpAfterBiopsy ||
-      _CurrentJourneyStep.followUpWithoutBiopsy =>
-        'Você chegou ao acompanhamento. O cuidado continua.',
-    };
+  static JourneyPlan _buildExplorationPlan(
+    JourneyDefinition<StepContent> definition,
+  ) {
+    final structure = definition.explorationStructure();
+    return JourneyPlan(
+      headline: journeyExplorationHeadline,
+      canAdvance: structure.canAdvance,
+      isExploration: true,
+      steps: [
+        for (final stage in structure.stages)
+          PlannedStep(
+            stage.content,
+            stage.status,
+            journeyStatusLabelFor(stage.status),
+          ),
+      ],
+    );
   }
 }
 

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:acolher_app/data/content.dart';
+import 'package:acolher_app/domain/journey_definition.dart';
 import 'package:acolher_app/services/journey_session.dart';
 
 void main() {
@@ -47,7 +47,7 @@ void main() {
     expect(_currentStep(view.plan).content.id, 'colposcopia');
     expect(view.plan.canAdvance, isTrue);
     final biopsy = _step(view.plan, 'biopsia');
-    expect(biopsy.status, JourneyStepStatus.mayBeNeeded);
+    expect(biopsy.status, JourneyStageStatus.mayBeNeeded);
     expect(biopsy.statusLabel, 'Pode ser necessária');
   });
 
@@ -116,7 +116,7 @@ void main() {
     addTearDown(journey.dispose);
 
     final pending = await journey.chooseSituation(
-      OnboardingAnswer.postColposcopy,
+      JourneySituation.postColposcopy,
     );
     expect(pending, isA<JourneyActionSucceeded>());
     expect(journey.view, isA<PostColposcopyDecisionView>());
@@ -132,7 +132,7 @@ void main() {
 
     final plan = (journey.view as ActiveJourneyView).plan;
     expect(_currentStep(plan).content.id, 'acompanhamento');
-    expect(_step(plan, 'biopsia').status, JourneyStepStatus.notNeeded);
+    expect(_step(plan, 'biopsia').status, JourneyStageStatus.notNeeded);
     expect(
       _step(plan, 'biopsia').statusLabel,
       'Biópsia não necessária',
@@ -170,14 +170,14 @@ void main() {
     addTearDown(journey.dispose);
 
     journey.beginCurrentStageSelection();
-    await journey.chooseSituation(OnboardingAnswer.explore);
+    await journey.chooseSituation(JourneySituation.explore);
 
     final exploration = journey.view as ExplorationView;
     expect(exploration.hasPreservedProgress, isTrue);
     expect(exploration.plan.isExploration, isTrue);
     expect(
       exploration.plan.steps.where(
-        (step) => step.status == JourneyStepStatus.current,
+        (step) => step.status == JourneyStageStatus.current,
       ),
       isEmpty,
     );
@@ -255,7 +255,7 @@ void main() {
 
 PlannedStep _currentStep(JourneyPlan plan) {
   return plan.steps.singleWhere(
-    (step) => step.status == JourneyStepStatus.current,
+    (step) => step.status == JourneyStageStatus.current,
   );
 }
 

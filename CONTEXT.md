@@ -4,6 +4,10 @@ Este contexto descreve a linguagem do aplicativo de acolhimento e orientação d
 
 ## Language
 
+**Definição da Jornada**:
+A fonte única da estrutura da jornada: identidades estáveis, ordem, transições permitidas e associação validada de cada etapa ao conteúdo editorial. Ela não contém textos clínicos, persistência nem estado transitório de telas.
+_Avoid_: duplicar a estrutura entre conteúdo, sessão e telas
+
 **Etapa atual da jornada**:
 A única posição persistida do cuidado da pessoa; no Acompanhamento, ela distingue internamente o caminho com Biópsia do caminho em que ela não foi necessária. A situação escolhida no onboarding apenas determina a posição inicial e não é preservada separadamente.
 _Avoid_: persistir a escolha do onboarding como um segundo estado da jornada

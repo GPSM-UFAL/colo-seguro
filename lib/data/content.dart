@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../domain/journey_definition.dart';
+
 /// ===================================================================
-/// CONTEÚDO + FLUXOGRAMA DO APP "Colo Seguro"
+/// CONTEÚDO DO APP "Colo Seguro"
 ///
 /// Aqui ficam:
 ///   1) Os textos de cada tela (retirados do Figma e do fluxograma).
@@ -9,7 +11,7 @@ import 'package:flutter/material.dart';
 ///   3) O campo `illustration`-> nome da imagem em assets/illustrations/
 ///
 /// Para mudar conteúdo, áudio ou ilustração, edite este arquivo. As regras de
-/// progresso e a árvore de decisão ficam em `services/journey_session.dart`.
+/// estrutura da jornada fica em `domain/journey_definition.dart`.
 /// ===================================================================
 
 /// ---------- Carrossel de introdução (telas 0 a 5) ----------
@@ -109,22 +111,13 @@ const String onboardingTitle = 'Onde você está agora?';
 const String onboardingSubtitle =
     'Toque na etapa em que você está. O app guarda apenas sua etapa atual neste aparelho para não perder seu progresso.';
 
-enum OnboardingAnswer {
-  preventiveCollected,
-  alteredResult,
-  referred,
-  awaitingColposcopy,
-  postColposcopy,
-  explore,
-}
-
 class OnboardingOption {
-  final OnboardingAnswer answer;
+  final JourneySituation situation;
   final String label;
   final IconData icon;
 
   const OnboardingOption({
-    required this.answer,
+    required this.situation,
     required this.label,
     required this.icon,
   });
@@ -132,36 +125,72 @@ class OnboardingOption {
 
 const List<OnboardingOption> onboardingOptions = [
   OnboardingOption(
-    answer: OnboardingAnswer.preventiveCollected,
+    situation: JourneySituation.preventiveCollected,
     label: 'Fiz o exame preventivo Papanicolau ou Teste DNA HPV',
     icon: Icons.assignment_outlined,
   ),
   OnboardingOption(
-    answer: OnboardingAnswer.alteredResult,
+    situation: JourneySituation.alteredResult,
     label: 'Recebi um resultado alterado no exame de triagem preventivo',
     icon: Icons.favorite_outline_rounded,
   ),
   OnboardingOption(
-    answer: OnboardingAnswer.referred,
+    situation: JourneySituation.referred,
     label: 'Fui encaminhada a outro serviço',
     icon: Icons.local_hospital_outlined,
   ),
   OnboardingOption(
-    answer: OnboardingAnswer.awaitingColposcopy,
+    situation: JourneySituation.awaitingColposcopy,
     label: 'Vou fazer a colposcopia',
     icon: Icons.search_rounded,
   ),
   OnboardingOption(
-    answer: OnboardingAnswer.postColposcopy,
+    situation: JourneySituation.postColposcopy,
     label: 'Já fiz a colposcopia',
     icon: Icons.assignment_turned_in_outlined,
   ),
   OnboardingOption(
-    answer: OnboardingAnswer.explore,
+    situation: JourneySituation.explore,
     label: 'Não sei — quero ver tudo',
     icon: Icons.help_outline_rounded,
   ),
 ];
+
+const String journeyExplorationHeadline =
+    'Explore todos os passos, sem marcar uma etapa atual.';
+
+String journeyHeadlineFor(JourneyStageId stage) {
+  return switch (stage) {
+    JourneyStageId.preventiveCollection =>
+      'Veja o caminho completo, com calma.',
+    JourneyStageId.result =>
+      'Você fez o preventivo. Agora é aguardar o resultado.',
+    JourneyStageId.referral =>
+      'Seu exame teve uma alteração. Vamos juntas no próximo passo.',
+    JourneyStageId.colposcopy =>
+      'A colposcopia é o seu próximo passo. Saber o que esperar ajuda.',
+    JourneyStageId.biopsy =>
+      'A biópsia foi solicitada. Vamos entender esta etapa.',
+    JourneyStageId.followUp =>
+      'Você chegou ao acompanhamento. O cuidado continua.',
+  };
+}
+
+String journeyStatusLabelFor(
+  JourneyStageStatus status, {
+  bool isFirstStage = false,
+}) {
+  return switch (status) {
+    JourneyStageStatus.completed => 'Concluído',
+    JourneyStageStatus.current =>
+      isFirstStage ? 'Comece por aqui' : 'Você está aqui',
+    JourneyStageStatus.next => 'Próxima etapa',
+    JourneyStageStatus.later => 'Depois',
+    JourneyStageStatus.mayBeNeeded => 'Pode ser necessária',
+    JourneyStageStatus.notNeeded => 'Biópsia não necessária',
+    JourneyStageStatus.exploration => 'Conheça esta etapa',
+  };
+}
 
 /// ===================================================================
 /// CONTEÚDO DAS ETAPAS (nós do fluxograma)
@@ -353,17 +382,27 @@ const Map<String, StepContent> stepContents = {
     audio: 'etapa_acompanhamento.mp3',
     illustration: 'etapa_acompanhamento.jpeg',
   ),
-  // ----- Nós terminais dos caminhos A e B (aparecem em "todos os caminhos") -----
+};
+
+/// Conteúdo complementar ainda não associado à Definição da Jornada.
+///
+/// Mantê-lo separado faz a validação fail-fast distinguir conteúdo ativo de
+/// material editorial reservado para uma evolução futura do caminho.
+const Map<String, StepContent> supplementaryStepContents = {
   'rotina': StepContent(
     id: 'rotina',
     title: 'Volta à rotina',
     summary: 'Resultado normal. Veja como seguir a rotina.',
     reassurance: 'Resultado normal. Continue se cuidando.',
     sections: [
-      StepSection('O que significa (NILM)',
-          'Seu exame não mostrou alterações. Você não precisa de exames avançados agora.'),
-      StepSection('O que fazer',
-          'Você volta ao rastreamento de rotina no posto. Em geral, repete o preventivo a cada 3 anos (ou conforme a equipe orientar).'),
+      StepSection(
+        'O que significa (NILM)',
+        'Seu exame não mostrou alterações. Você não precisa de exames avançados agora.',
+      ),
+      StepSection(
+        'O que fazer',
+        'Você volta ao rastreamento de rotina no posto. Em geral, repete o preventivo a cada 3 anos (ou conforme a equipe orientar).',
+      ),
     ],
     tip: 'Não deixe de repetir o preventivo no prazo.',
     audio: 'etapa_rotina.mp3',
@@ -375,10 +414,14 @@ const Map<String, StepContent> stepContents = {
     summary: 'Alteração leve. Veja por que é só repetir o exame.',
     reassurance: 'Alteração leve não é motivo para se assustar.',
     sections: [
-      StepSection('O que significa (ASC-US, LSIL)',
-          'É uma alteração pequena. Muitas dessas alterações desaparecem sozinhas, sem precisar de tratamento.'),
-      StepSection('O que fazer',
-          'A conduta costuma ser só repetir o exame preventivo depois de um tempo, no prazo que a equipe indicar. Você continua acompanhada no posto.'),
+      StepSection(
+        'O que significa (ASC-US, LSIL)',
+        'É uma alteração pequena. Muitas dessas alterações desaparecem sozinhas, sem precisar de tratamento.',
+      ),
+      StepSection(
+        'O que fazer',
+        'A conduta costuma ser só repetir o exame preventivo depois de um tempo, no prazo que a equipe indicar. Você continua acompanhada no posto.',
+      ),
     ],
     tip: 'Volte para repetir o exame na data combinada.',
     audio: 'etapa_repetir.mp3',

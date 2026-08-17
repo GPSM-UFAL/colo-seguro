@@ -31,7 +31,8 @@ Quem escolhe "Não sei — quero ver tudo" entra no **Modo de exploração**: v�
 As responsabilidades ficam separadas:
 
 - `lib/data/content.dart` — textos e conteúdo das etapas;
-- `lib/services/journey_session.dart` — restauração, migração, transições, persistência e construção da jornada;
+- `lib/domain/journey_definition.dart` — identidades, ordem, transições e associação validada ao conteúdo;
+- `lib/services/journey_session.dart` — persistência, migração e estado transitório das telas;
 - `CONTEXT.md` — vocabulário e invariantes do cuidado.
 
 A `JourneySession` publica estados prontos para as telas e só altera o estado visível depois que a nova etapa foi persistida com sucesso.
@@ -62,7 +63,8 @@ lib/
   main.dart                  # entrada do app
   theme/app_theme.dart       # cores e fonte (tokens do Figma)
   services/audio_service.dart # tocador de áudio (just_audio)
-  services/journey_session.dart # estado, persistência e plano da jornada
+  domain/journey_definition.dart # estrutura e regras puras da jornada
+  services/journey_session.dart # persistência e estado transitório
   data/content.dart          # TODOS os textos + nomes dos áudios
   widgets/
     audio_button.dart        # botão "Ouvir explicação" reutilizável
