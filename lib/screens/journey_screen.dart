@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../domain/journey_definition.dart';
 import '../services/journey_session.dart';
 import '../theme/app_theme.dart';
 import 'step_detail_screen.dart';
@@ -113,7 +114,7 @@ class JourneyScreen extends StatelessWidget {
                 index + 1,
                 plan.steps.length,
               ),
-              onAdvance: step.status == JourneyStepStatus.current
+              onAdvance: step.status == JourneyStageStatus.current
                   ? onAdvanceStep
                   : null,
             );
@@ -235,7 +236,7 @@ class _TimelineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCurrent = step.status == JourneyStepStatus.current;
+    final isCurrent = step.status == JourneyStageStatus.current;
     return Stack(
       children: [
         if (!isLast)
@@ -274,12 +275,12 @@ class _TimelineTile extends StatelessWidget {
 
 class _TimelineDot extends StatelessWidget {
   const _TimelineDot({required this.status});
-  final JourneyStepStatus status;
+  final JourneyStageStatus status;
 
   @override
   Widget build(BuildContext context) {
     switch (status) {
-      case JourneyStepStatus.completed:
+      case JourneyStageStatus.completed:
         return Container(
           width: 28,
           height: 28,
@@ -288,7 +289,7 @@ class _TimelineDot extends StatelessWidget {
           child: const Icon(Icons.check_rounded,
               size: 16, color: AppColors.textOnPrimary),
         );
-      case JourneyStepStatus.current:
+      case JourneyStageStatus.current:
         // anel verde com centro branco
         return Container(
           width: 28,
@@ -321,7 +322,7 @@ class _PlainRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFuture = step.status != JourneyStepStatus.completed;
+    final isFuture = step.status != JourneyStageStatus.completed;
     final titleColor =
         isFuture ? AppColors.textMutedWarm : AppColors.textDarkWarm;
     final metaColor =

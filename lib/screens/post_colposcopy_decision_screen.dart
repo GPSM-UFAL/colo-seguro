@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../domain/journey_definition.dart';
 import '../services/audio_service.dart';
 import '../services/journey_session.dart';
 import '../theme/app_theme.dart';

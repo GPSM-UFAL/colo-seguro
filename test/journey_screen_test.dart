@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:acolher_app/data/content.dart';
+import 'package:acolher_app/domain/journey_definition.dart';
 import 'package:acolher_app/screens/journey_screen.dart';
 import 'package:acolher_app/services/journey_session.dart';
 
@@ -18,7 +18,7 @@ void main() {
       initialValues: const {'introduction_completed': true},
     );
     addTearDown(journey.dispose);
-    await journey.chooseSituation(OnboardingAnswer.explore);
+    await journey.chooseSituation(JourneySituation.explore);
     final plan = (journey.view as ExplorationView).plan;
 
     await tester.pumpWidget(
