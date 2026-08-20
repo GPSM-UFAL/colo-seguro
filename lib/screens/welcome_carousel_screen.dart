@@ -94,9 +94,10 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Image.asset(
-                        'assets/branding/splash_logo.png',
+                        'assets/branding/logo_mark.png',
                         width: 20,
                         height: 20,
+                        semanticLabel: 'Símbolo do Colo Seguro',
                       ),
                       const SizedBox(width: 6),
                       const Text(

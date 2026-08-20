@@ -72,11 +72,49 @@ class _ColoSeguroBootstrapState extends State<ColoSeguroBootstrap> {
           title: 'Colo Seguro',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
-          home: const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
+          home: const _BrandLaunchScreen(),
         );
       },
+    );
+  }
+}
+
+class _BrandLaunchScreen extends StatelessWidget {
+  const _BrandLaunchScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image(
+                  image: AssetImage('assets/branding/logo_mark.png'),
+                  width: 176,
+                  height: 176,
+                  semanticLabel: 'Símbolo do Colo Seguro',
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Colo Seguro',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textDarkWarm,
+                    fontSize: 32,
+                    height: 1.1,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
