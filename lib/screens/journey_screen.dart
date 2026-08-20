@@ -23,7 +23,11 @@ class JourneyScreen extends StatelessWidget {
   final VoidCallback? onAdvanceStep;
 
   void _openStep(
-      BuildContext context, PlannedStep step, int number, int total) {
+    BuildContext context,
+    PlannedStep step,
+    int number,
+    int total,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => StepDetailScreen(
@@ -31,8 +35,12 @@ class JourneyScreen extends StatelessWidget {
           statusLabel: step.statusLabel,
           stepNumber: number,
           totalSteps: total,
-          breadcrumbLabel:
-              plan.isExploration ? 'Todas as etapas' : 'Meu caminho',
+          breadcrumbLabel: plan.isExploration
+              ? 'Voltar para todas as etapas'
+              : 'Meu caminho',
+          explorationSteps: plan.isExploration
+              ? plan.steps.map((plannedStep) => plannedStep.content).toList()
+              : null,
         ),
       ),
     );
@@ -41,23 +49,15 @@ class JourneyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isExploration = plan.isExploration;
-    return ListView(
+    final content = ListView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       children: [
         if (isExploration) ...[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              if (onReturnToJourney != null)
-                _ReturnToJourneyButton(onTap: onReturnToJourney!),
-              _ChangeButton(
-                onTap: onDefineCurrentStage,
-                label: 'Definir onde estou',
-              ),
-            ],
-          ),
+          if (onReturnToJourney != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _ReturnToJourneyButton(onTap: onReturnToJourney!),
+            ),
           const SizedBox(height: 18),
           const Text(
             'Todas as etapas',
@@ -85,21 +85,18 @@ class JourneyScreen extends StatelessWidget {
             ],
           ),
         const SizedBox(height: 6),
-        Text(plan.headline,
-            style:
-                const TextStyle(fontSize: 15, color: AppColors.textSecondary)),
+        Text(
+          plan.headline,
+          style: const TextStyle(fontSize: 15, color: AppColors.textSecondary),
+        ),
         const SizedBox(height: 24),
         if (isExploration)
           ...List.generate(plan.steps.length, (index) {
             final step = plan.steps[index];
             return _ExplorationListItem(
               step: step,
-              onOpen: () => _openStep(
-                context,
-                step,
-                index + 1,
-                plan.steps.length,
-              ),
+              onOpen: () =>
+                  _openStep(context, step, index + 1, plan.steps.length),
             );
           })
         else
@@ -108,19 +105,26 @@ class JourneyScreen extends StatelessWidget {
             return _TimelineTile(
               step: step,
               isLast: index == plan.steps.length - 1,
-              onOpen: () => _openStep(
-                context,
-                step,
-                index + 1,
-                plan.steps.length,
-              ),
+              onOpen: () =>
+                  _openStep(context, step, index + 1, plan.steps.length),
               onAdvance: step.status == JourneyStageStatus.current
                   ? onAdvanceStep
                   : null,
             );
           }),
+        if (isExploration && onDefineCurrentStage != null) ...[
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: _ChangeButton(
+              onTap: onDefineCurrentStage,
+              label: 'Definir onde estou',
+            ),
+          ),
+        ],
       ],
     );
+    return content;
   }
 }
 
@@ -207,11 +211,18 @@ class _ChangeButton extends StatelessWidget {
     if (onTap == null) return const SizedBox.shrink();
     return TextButton.icon(
       onPressed: onTap,
-      icon: const Icon(Icons.edit_rounded,
-          size: 16, color: AppColors.primaryPlum),
-      label: Text(label,
-          style: const TextStyle(
-              color: AppColors.primaryPlum, fontWeight: FontWeight.w600)),
+      icon: const Icon(
+        Icons.edit_rounded,
+        size: 16,
+        color: AppColors.primaryPlum,
+      ),
+      label: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.primaryPlum,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         backgroundColor: AppColors.surfaceLavender,
@@ -285,9 +296,14 @@ class _TimelineDot extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: const BoxDecoration(
-              color: AppColors.primaryPlum, shape: BoxShape.circle),
-          child: const Icon(Icons.check_rounded,
-              size: 16, color: AppColors.textOnPrimary),
+            color: AppColors.primaryPlum,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.check_rounded,
+            size: 16,
+            color: AppColors.textOnPrimary,
+          ),
         );
       case JourneyStageStatus.current:
         // anel verde com centro branco
@@ -338,20 +354,28 @@ class _PlainRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(step.content.title,
-                      style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: titleColor)),
+                  Text(
+                    step.content.title,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: titleColor,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(step.statusLabel,
-                      style: TextStyle(fontSize: 13, color: metaColor)),
+                  Text(
+                    step.statusLabel,
+                    style: TextStyle(fontSize: 13, color: metaColor),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
-                color: AppColors.textMutedWarm
-                    .withValues(alpha: isFuture ? 0.6 : 1)),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.textMutedWarm.withValues(
+                alpha: isFuture ? 0.6 : 1,
+              ),
+            ),
           ],
         ),
       ),
@@ -396,23 +420,34 @@ class _CurrentCard extends StatelessWidget {
               color: AppColors.primaryPlum,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text('VOCÊ ESTÁ AQUI',
-                style: TextStyle(
-                    color: AppColors.textOnPrimary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3)),
+            child: const Text(
+              'VOCÊ ESTÁ AQUI',
+              style: TextStyle(
+                color: AppColors.textOnPrimary,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
           ),
           const SizedBox(height: 10),
-          Text(step.content.title,
-              style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primaryDarker)),
+          Text(
+            step.content.title,
+            style: const TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primaryDarker,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text(step.content.summary,
-              style: const TextStyle(
-                  fontSize: 14, height: 1.45, color: AppColors.primaryDarker)),
+          Text(
+            step.content.summary,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.45,
+              color: AppColors.primaryDarker,
+            ),
+          ),
           const SizedBox(height: 14),
           // Botão "Entender esta etapa →"
           Material(
@@ -422,21 +457,29 @@ class _CurrentCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               onTap: onOpen,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Flexible(
-                      child: Text('Entender esta etapa',
-                          style: TextStyle(
-                              color: AppColors.textOnPrimary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Entender esta etapa',
+                        style: TextStyle(
+                          color: AppColors.textOnPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                     SizedBox(width: 8),
-                    Icon(Icons.arrow_forward_rounded,
-                        color: AppColors.textOnPrimary, size: 18),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      color: AppColors.textOnPrimary,
+                      size: 18,
+                    ),
                   ],
                 ),
               ),
@@ -452,24 +495,34 @@ class _CurrentCard extends StatelessWidget {
                 onTap: onAdvance,
                 child: Container(
                   width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: AppColors.primaryPlum, width: 1.2),
+                    border: Border.all(
+                      color: AppColors.primaryPlum,
+                      width: 1.2,
+                    ),
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.check_rounded,
-                          color: AppColors.primaryPlum, size: 18),
+                      Icon(
+                        Icons.check_rounded,
+                        color: AppColors.primaryPlum,
+                        size: 18,
+                      ),
                       SizedBox(width: 8),
                       Expanded(
-                        child: Text('Passei para a próxima etapa',
-                            style: TextStyle(
-                                color: AppColors.primaryPlum,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600)),
+                        child: Text(
+                          'Passei para a próxima etapa',
+                          style: TextStyle(
+                            color: AppColors.primaryPlum,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ],
                   ),
