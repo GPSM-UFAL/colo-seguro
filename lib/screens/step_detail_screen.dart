@@ -16,6 +16,7 @@ class StepDetailScreen extends StatefulWidget {
     this.stepNumber,
     this.totalSteps,
     this.breadcrumbLabel = 'Voltar',
+    this.explorationSteps,
   });
 
   final StepContent content;
@@ -23,6 +24,7 @@ class StepDetailScreen extends StatefulWidget {
   final int? stepNumber;
   final int? totalSteps;
   final String breadcrumbLabel;
+  final List<StepContent>? explorationSteps;
 
   @override
   State<StepDetailScreen> createState() => _StepDetailScreenState();
@@ -30,25 +32,52 @@ class StepDetailScreen extends StatefulWidget {
 
 class _StepDetailScreenState extends State<StepDetailScreen> {
   int _selectedTab = 0;
+  late int _currentStepIndex;
+  final ScrollController _scrollController = ScrollController();
 
-  bool get _hasTabs => widget.content.tabs?.isNotEmpty ?? false;
+  @override
+  void initState() {
+    super.initState();
+    _currentStepIndex = (widget.stepNumber ?? 1) - 1;
+  }
 
-  List<CollectionTabContent> get _tabs => widget.content.tabs ?? const [];
+  StepContent get _content =>
+      widget.explorationSteps?[_currentStepIndex] ?? widget.content;
+
+  int? get _stepNumber => widget.explorationSteps == null
+      ? widget.stepNumber
+      : _currentStepIndex + 1;
+
+  bool get _hasTabs => _content.tabs?.isNotEmpty ?? false;
+
+  List<CollectionTabContent> get _tabs => _content.tabs ?? const [];
 
   CollectionTabContent get _activeTab =>
       _tabs[_selectedTab.clamp(0, _tabs.length - 1).toInt()];
 
+  void _showExplorationStep(int index) {
+    AudioService.instance.stop();
+    setState(() {
+      _currentStepIndex = index;
+      _selectedTab = 0;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
+    });
+  }
+
   @override
   void dispose() {
     AudioService.instance.stop();
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final showProgress = widget.stepNumber != null && widget.totalSteps != null;
-    final sections = _hasTabs ? _activeTab.sections : widget.content.sections;
-    final tip = _hasTabs ? _activeTab.tip : widget.content.tip;
+    final sections = _hasTabs ? _activeTab.sections : _content.sections;
+    final tip = _hasTabs ? _activeTab.tip : _content.tip;
     const tipBackground = AppColors.alertBg;
     const tipTextColor = AppColors.alert;
 
@@ -56,6 +85,7 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
       backgroundColor: AppColors.bgRose,
       body: SafeArea(
         child: ListView(
+          controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
           children: [
             // Breadcrumb verde "← Meu caminho"
@@ -67,29 +97,38 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.arrow_back_rounded,
-                        size: 20, color: AppColors.primaryPlum),
+                    const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 20,
+                      color: AppColors.primaryPlum,
+                    ),
                     const SizedBox(width: 8),
-                    Text(widget.breadcrumbLabel,
-                        style: const TextStyle(
-                            color: AppColors.primaryPlum,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500)),
+                    Text(
+                      widget.breadcrumbLabel,
+                      style: const TextStyle(
+                        color: AppColors.primaryPlum,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 14),
-            Text(widget.content.title,
-                style: const TextStyle(
-                    fontSize: 27,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDarkWarm)),
+            Text(
+              _content.title,
+              style: const TextStyle(
+                fontSize: 27,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textDarkWarm,
+              ),
+            ),
             const SizedBox(height: 16),
             if (showProgress) ...[
               Row(
                 children: List.generate(widget.totalSteps!, (i) {
-                  final active = i < widget.stepNumber!;
+                  final active = i < _stepNumber!;
                   return Expanded(
                     child: Container(
                       height: 6,
@@ -108,14 +147,21 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(widget.statusLabel,
-                      style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primaryPlum)),
-                  Text('Etapa ${widget.stepNumber} de ${widget.totalSteps}',
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textMutedWarm)),
+                  Text(
+                    widget.statusLabel,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primaryPlum,
+                    ),
+                  ),
+                  Text(
+                    'Etapa $_stepNumber de ${widget.totalSteps}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMutedWarm,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 18),
@@ -129,16 +175,22 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.favorite_rounded,
-                      color: AppColors.alert, size: 20),
+                  const Icon(
+                    Icons.favorite_rounded,
+                    color: AppColors.alert,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(widget.content.reassurance,
-                        style: const TextStyle(
-                            fontSize: 15,
-                            height: 1.3,
-                            color: AppColors.alert,
-                            fontWeight: FontWeight.w500)),
+                    child: Text(
+                      _content.reassurance,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.3,
+                        color: AppColors.alert,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -162,8 +214,9 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
                   children: [
                     for (int i = 0; i < sections.length; i++) ...[
                       _Section(
-                          section: sections[i],
-                          showAudioButton: sections[i].audioFile != null),
+                        section: sections[i],
+                        showAudioButton: sections[i].audioFile != null,
+                      ),
                       if (i < sections.length - 1) ...[
                         const SizedBox(height: 18),
                         Container(height: 1, color: AppColors.borderWarm),
@@ -196,28 +249,64 @@ class _StepDetailScreenState extends State<StepDetailScreen> {
                 children: [
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(tip,
-                        style: const TextStyle(
-                            fontSize: 14,
-                            height: 1.35,
-                            color: tipTextColor,
-                            fontWeight: FontWeight.w500)),
+                    child: Text(
+                      tip,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.35,
+                        color: tipTextColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            AudioButton(audioFile: widget.content.audio),
+            AudioButton(audioFile: _content.audio),
             const SizedBox(height: 12),
-            // Botão verde "Voltar para meu caminho"
-            SizedBox(
-              width: double.infinity,
-              child: PrimaryButton(
-                label: 'Voltar para meu caminho',
-                icon: null,
-                onPressed: () => Navigator.of(context).pop(),
+            if (widget.explorationSteps != null) ...[
+              if (_currentStepIndex > 0) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        _showExplorationStep(_currentStepIndex - 1),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: const Text('Etapa anterior'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(54),
+                      foregroundColor: AppColors.primaryPlum,
+                      side: const BorderSide(color: AppColors.primaryPlum),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (_currentStepIndex < widget.explorationSteps!.length - 1) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: PrimaryButton(
+                    label: 'Próxima etapa',
+                    onPressed: () =>
+                        _showExplorationStep(_currentStepIndex + 1),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ],
+            if (widget.explorationSteps == null)
+              SizedBox(
+                width: double.infinity,
+                child: PrimaryButton(
+                  label: 'Voltar para meu caminho',
+                  icon: null,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -239,16 +328,22 @@ class _Section extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.info_outline_rounded,
-                size: 18, color: AppColors.primaryPlum),
+            const Icon(
+              Icons.info_outline_rounded,
+              size: 18,
+              color: AppColors.primaryPlum,
+            ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(section.label.toUpperCase(),
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.4,
-                      color: AppColors.primaryPlum)),
+              child: Text(
+                section.label.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.4,
+                  color: AppColors.primaryPlum,
+                ),
+              ),
             ),
             if (showAudioButton && section.audioFile != null) ...[
               const SizedBox(width: 12),
@@ -261,9 +356,14 @@ class _Section extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        Text(section.text,
-            style: const TextStyle(
-                fontSize: 16, height: 1.5, color: AppColors.textDarkWarm)),
+        Text(
+          section.text,
+          style: const TextStyle(
+            fontSize: 16,
+            height: 1.5,
+            color: AppColors.textDarkWarm,
+          ),
+        ),
       ],
     );
   }
