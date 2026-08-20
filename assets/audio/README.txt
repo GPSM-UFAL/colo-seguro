@@ -39,14 +39,15 @@ Depois de adicionar ou substituir áudios, reinstale o app ou rode:
   flutter pub get
   flutter run
 
------- NOMES EXATOS DOS ARQUIVOS ESPERADOS ------
+------ NOMES DOS ARQUIVOS USADOS ATUALMENTE ------
 
 Carrossel de introdução:
-  intro_0.mp3   -> "Vamos te acompanhar"
-  intro_1.mp3   -> "O exame preventivo"
-  intro_2.mp3   -> "Seu resultado veio alterado"
+  vamos_te_acompanhar.mp3       -> "Vamos te acompanhar"
+  o_exame_preventivo.mp3        -> "O exame preventivo"
+  seu_resultado_veio_alterado.mp3 -> "Seu resultado veio alterado"
   intro_3.mp3   -> "Você vai a um serviço especial"
   intro_4.mp3   -> "O que é colposcopia"
+  intro_biopsia.mp3 -> "O que é biópsia"
   intro_5.mp3   -> "Você não está sozinha"
 
 Etapas da jornada:
@@ -54,10 +55,16 @@ Etapas da jornada:
   etapa_resultado.mp3       -> Resultado do exame
   etapa_encaminhamento.mp3  -> Encaminhamento
   etapa_colposcopia.mp3     -> Colposcopia
+  etapa_biopsia.mp3         -> Biópsia
   etapa_acompanhamento.mp3  -> Conduta e acompanhamento
+  etapa_rotina.mp3          -> Volta à rotina
+  etapa_repetir.mp3         -> Repetição do exame
 
 Decisões da jornada:
   depois_colposcopia.mp3    -> Depois da colposcopia
+
+Os áudios de detalhes, dúvidas, glossário e apoio seguem os nomes definidos
+em `lib/data/content.dart` e `lib/screens/support_screen.dart`.
 
 ------ IMPORTANTE ------
 

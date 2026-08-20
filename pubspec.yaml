@@ -33,7 +33,7 @@ flutter:
     - assets/audio/
     - assets/branding/
     # >>> AQUI ENTRAM AS ILUSTRAÇÕES <<<
-    # Coloque as imagens em assets/illustrations/ (nomes no LEIA-ME).
+    # Coloque as imagens em assets/illustrations/ (nomes no README.txt).
     # Enquanto não existirem, o app usa um placeholder e não quebra.
     - assets/illustrations/
 

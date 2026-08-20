@@ -6,8 +6,8 @@ import '../theme/app_theme.dart';
 
 /// Botão "Ouvir explicação" reutilizável.
 ///
-/// Recebe o nome do arquivo de áudio (ex.: `intro_0.mp3`) que deve estar
-/// em `assets/audio/`. Mostra ícone de play/pause e dá feedback se o áudio
+/// Recebe o nome do arquivo de áudio (ex.: `vamos_te_acompanhar.mp3`) que deve
+/// estar em `assets/audio/`. Mostra ícone de play/pause e dá feedback se o áudio
 /// ainda não estiver disponível.
 class AudioButton extends StatefulWidget {
   const AudioButton({

@@ -12,7 +12,7 @@ abstract interface class AudioController {
 /// Serviço único (singleton) que controla a reprodução dos áudios do app.
 ///
 /// Os áudios ficam em `assets/audio/`. Cada tela passa o nome do arquivo
-/// (ex.: `intro_0.mp3`) e este serviço toca/pausa.
+/// (ex.: `vamos_te_acompanhar.mp3`) e este serviço toca/pausa.
 class AudioService implements AudioController {
   AudioService._internal() {
     _player.processingStateStream.listen((state) async {
