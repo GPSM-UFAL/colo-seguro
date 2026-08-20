@@ -39,13 +39,13 @@ A `JourneySession` publica estados prontos para as telas e só altera o estado v
 
 ## Onde colocar as ilustrações
 
-As imagens de cada tela vão em **`assets/illustrations/`**. Os nomes esperados estão em `assets/illustrations/LEIA-ME.txt` (ex.: `intro_0.png`, `etapa_encaminhamento.png`).
+As imagens de cada tela vão em **`assets/illustrations/`**. Os nomes usados atualmente estão em `assets/illustrations/README.txt` (ex.: `welcome.jpeg`, `etapa_colposcopia.png`).
 
-Enquanto a arte não existe, o app mostra um placeholder suave e **não quebra** — você adiciona as imagens depois, uma a uma. Para usar SVG no lugar de PNG, veja a observação no fim do `LEIA-ME.txt`.
+Enquanto a arte não existe, o app mostra um placeholder suave e **não quebra** — você adiciona as imagens depois, uma a uma. Para usar SVG no lugar de PNG, veja a observação no fim do `README.txt`.
 
 ## Onde colocar o áudio
 
-Os `.mp3` da narração vão em **`assets/audio/`**. Os nomes exatos esperados estão em `assets/audio/LEIA-ME.txt` (ex.: `intro_0.mp3`, `etapa_encaminhamento.mp3`).
+Os `.mp3` da narração vão em **`assets/audio/`**. Os nomes usados atualmente estão em `assets/audio/README.txt` (ex.: `vamos_te_acompanhar.mp3`, `etapa_encaminhamento.mp3`).
 
 Fluxo sugerido:
 
@@ -83,6 +83,13 @@ lib/
 assets/audio/                # >>> seus .mp3 aqui <<<
 assets/illustrations/        # >>> suas imagens aqui <<<
 ```
+
+## Design e documentação
+
+- `prototype.pen` — protótipo visual atual, incluindo o fluxo de biópsia.
+- `images/digital-welcome.fig` — fonte complementar do design no Figma.
+- `SCREEN_GUIDE.md` — requisitos funcionais e fluxo das telas.
+- `GETTING_STARTED.md` — instruções resumidas para executar e gerar builds.
 
 ## Empacotar
 

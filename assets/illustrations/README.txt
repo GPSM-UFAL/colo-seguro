@@ -10,24 +10,23 @@ Formato sugerido: PNG (com fundo transparente ou claro).
 Tamanho sugerido: ~1080 x 720 px (proporção 3:2).
 Se preferir SVG, veja a observação no final.
 
------- NOMES EXATOS DOS ARQUIVOS ESPERADOS ------
+------ NOMES DOS ARQUIVOS USADOS ATUALMENTE ------
 
 Carrossel de introdução:
-  intro_0.png  -> Boas-vindas
-  intro_1.png  -> O exame preventivo
-  intro_2.png  -> Resultado alterado
-  intro_3.png  -> Serviço especializado
-  intro_4.png  -> O que é colposcopia
-  intro_5.png  -> Você não está sozinha
+  welcome.jpeg                         -> Boas-vindas
+  etapa_coleta.png                     -> O exame preventivo
+  etapa_resultado.png                  -> Resultado alterado
+  voce_vai_a_um_servico_especial.png   -> Serviço especializado
+  etapa_colposcopia.png                -> Colposcopia e biópsia
+  voce_nao_esta_sozinha.jpeg           -> Você não está sozinha
 
 Etapas da jornada (nós do fluxograma):
   etapa_coleta.png          -> Coleta do preventivo
   etapa_resultado.png       -> Resultado do exame
-  etapa_encaminhamento.png  -> Encaminhamento
+  voce_vai_a_um_servico_especial.png -> Encaminhamento
   etapa_colposcopia.png     -> Colposcopia
-  etapa_acompanhamento.png  -> Conduta e acompanhamento
-  etapa_rotina.png          -> Resultado normal (volta à rotina)
-  etapa_repetir.png         -> Alteração leve (repetir exame)
+  etapa_acompanhamento.jpeg -> Conduta e acompanhamento
+  etapa_rotina.jpeg         -> Resultado normal (volta à rotina)
 
 ------ COMO TROCAR/ATUALIZAR ------
 Basta colocar a imagem com o nome certo e rodar de novo.

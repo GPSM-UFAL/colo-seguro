@@ -31,8 +31,10 @@ flutter run -d <id-do-dispositivo>
 ## Onde ficam as coisas
 
 - `lib/data/content.dart` — todos os textos e a árvore de decisão da jornada.
-- `assets/audio/` — arquivos `.mp3` da narração (nomes no `LEIA-ME.txt`).
-- `assets/illustrations/` — imagens das telas (nomes no `LEIA-ME.txt`).
+- `assets/audio/` — arquivos `.mp3` da narração (nomes no `README.txt`).
+- `assets/illustrations/` — imagens das telas (nomes no `README.txt`).
+- `prototype.pen` — protótipo visual atual.
+- `SCREEN_GUIDE.md` — requisitos funcionais e fluxo das telas.
 
 > Áudios e ilustrações são opcionais para rodar: se ainda não existirem,
 > o app usa um placeholder e não quebra.
